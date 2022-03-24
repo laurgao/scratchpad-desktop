@@ -1,5 +1,5 @@
-import { ipcRenderer, contextBridge } from "electron";
-import { Item } from "../utils/types";
+import { contextBridge, ipcRenderer } from "electron";
+import { Section } from "../utils/types";
 
 declare global {
     interface Window {
@@ -31,11 +31,11 @@ const api = {
     Open: () => {
         ipcRenderer.send("open");
     },
-    Save: (items: Item[]) => {
-        ipcRenderer.send("save", items);
+    Save: (content: Section[]) => {
+        ipcRenderer.send("save", content);
     },
-    SaveAs: (items: Item[]) => {
-        ipcRenderer.send("saveAs", items);
+    SaveAs: (content: Section[]) => {
+        ipcRenderer.send("saveAs", content);
     },
     New: () => {
         ipcRenderer.send("new");

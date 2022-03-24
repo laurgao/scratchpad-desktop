@@ -1,13 +1,13 @@
 {
-  "name": "dotTodo",
+  "name": "scratchpad",
   "version": "0.1.0",
   "license": "MIT",
   "main": "main/electron/index.js",
   "author": {
     "name": "Samson Zhang"
   },
-  "description": "Simple electron-based local todo list app",
-  "productName": "dotTodo",
+  "description": "Simple electron-based local markdown editor",
+  "productName": "scratchpad",
   "scripts": {
     "dev": "concurrently \"yarn dev:vite\" \" yarn dev:electron\"",
     "dev:vite": "vite",
@@ -21,13 +21,18 @@
     "type-check": "tsc"
   },
   "dependencies": {
+    "@babel/runtime": "^7.17.8",
     "@types/mousetrap": "^1.6.9",
     "@vitejs/plugin-react": "^1.2.0",
+    "easymde": "^2.16.1",
     "electron-is-dev": "^2.0.0",
     "mousetrap": "^1.6.5",
     "mousetrap-global-bind": "^1.1.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
+    "react-icons": "^4.3.1",
+    "react-robust-accordion": "^0.5.2",
+    "react-simplemde-editor": "^5.0.2",
     "vite": "^2.8.4"
   },
   "devDependencies": {

@@ -1,5 +1,19 @@
-import { Item } from "./types";
+import { Section } from "./types";
 
-const getFileString = (items: Item[]) => items.map(d => `- [${d.completed ? "x" : ""}] ${d.task}`).join("\n");
+const getFileString = (items: Section[]) => {
+    let markdownTextOfCombinedSections = "";
+    for (let section of items) {
+        markdownTextOfCombinedSections += "# " + (section.title || "")
+        markdownTextOfCombinedSections += `
+
+`
+        markdownTextOfCombinedSections += section.body || ""
+        markdownTextOfCombinedSections += `
+
+
+`
+    }
+    return markdownTextOfCombinedSections;
+}
 
 export default getFileString;

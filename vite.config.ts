@@ -1,6 +1,6 @@
 import react from "@vitejs/plugin-react";
-import { UserConfig, ConfigEnv } from "vite";
 import { join } from "path";
+import { ConfigEnv, UserConfig } from "vite";
 
 const srcRoot = join(__dirname, "src");
 
@@ -22,7 +22,7 @@ export default ({ command }: ConfigEnv): UserConfig => {
                 rollupOptions: {}
             },
             server: {
-                port: process.env.PORT === undefined ? 3000 : +process.env.PORT
+                port: process.env.PORT === undefined ? 4000 : +process.env.PORT
             },
             optimizeDeps: {
                 exclude: ["path"]
@@ -45,7 +45,7 @@ export default ({ command }: ConfigEnv): UserConfig => {
             rollupOptions: {}
         },
         server: {
-            port: process.env.PORT === undefined ? 3000 : +process.env.PORT
+            port: process.env.PORT === undefined ? 4000 : +process.env.PORT
         },
         optimizeDeps: {
             exclude: ["path"]

@@ -1,13 +1,11 @@
-// Native
-import path, { join } from "path";
-
-// Packages
-import { BrowserWindow, app, ipcMain, dialog, IpcMainEvent } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, IpcMainEvent } from "electron";
 import isDev from "electron-is-dev";
 import * as fs from "fs";
-import getTodoStringIndices from "../utils/getTodoStringIndices";
-import { Item } from "../utils/types";
+import path, { join } from "path"; // Native
 import getFileString from "../utils/getFileString";
+// import getTodoStringIndices from "../utils/getTodoStringIndices";
+import { Section } from "../utils/types";
+
 
 const height = 600, width = 800, minWidth = 100, minHeight = 100;
 let window: BrowserWindow;
@@ -31,7 +29,7 @@ function createWindow() {
         }
     });
 
-    const port = process.env.PORT || 3000;
+    const port = process.env.PORT || 4000;
     const url = isDev ? `http://localhost:${port}` : join(__dirname, "../../src/out/index.html");
 
     // and load the index.html of the app.
@@ -79,13 +77,15 @@ app.on("window-all-closed", () => {
     if (process.platform !== "darwin") app.quit();
 });
 
+const filters = [{ name: "Markdown files", extensions: ["md", "todo"] }];
+
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
 ipcMain.on("open", (event: IpcMainEvent) => {
     dialog.showOpenDialog(window, {
-        filters: [{name: "todo files", extensions: ["todo"]}],
+        filters: filters,
         // multiSelections: false,
-    }).then(({filePaths}) => {
+    }).then(({ filePaths }) => {
         if (filePaths && filePaths[0]) {
             const filePath = filePaths[0];
             currentFilePath = filePath;
@@ -94,45 +94,44 @@ ipcMain.on("open", (event: IpcMainEvent) => {
                 if (err) {
                     console.log("error");
                 } else {
-                    // check if format is correct
+                    // // check if format is correct
                     const lines = content.split(/\r\n|\n\r|\n|\r/);
-                    const valid = lines.every(d => {
-                        const {openBracketIndex, closeBracketIndex, messageIndex} = getTodoStringIndices(d);
-                        const startsWithDash = d.charAt(0) === "-";
-                        const hasOpenBracket = d.charAt(openBracketIndex) === "[";
-                        const hasCloseBracket = d.charAt(closeBracketIndex) === "]";
-                        const hasMessage = !!d.charAt(messageIndex);
-                        return startsWithDash && hasOpenBracket && hasCloseBracket && hasMessage;
-                    });
+                    let id = 1;
 
-                    if (!valid) {
-                        console.log("error");
-                        return;
+                    let sections = [];
+                    let currSectionBody = null;
+                    let currSectionTitle = null;
+                    for (let line of lines) {
+                        // starts with # followed by space
+                        let match = line.match(/^#+ /);
+                        if (match && match.index === 0) {
+                            if (!(currSectionBody === null || currSectionTitle === null)) sections.push({ title: currSectionTitle, body: currSectionBody });
+                            currSectionBody = "";
+                            currSectionTitle = line;
+                        } else {
+                            currSectionBody += (line + "\n");
+                        }
+                        id++;
                     }
-
-                    const items = lines.map(d => {
-                        const {openBracketIndex, messageIndex} = getTodoStringIndices(d);
-                        const completed = d.charAt(openBracketIndex + 1).toLowerCase() === "x";
-                        const task = d.substring(messageIndex);
-                        return ({task, completed})
-                    });
-
-                    event.sender.send("open", {filename, items});
+                    sections.push({ title: currSectionTitle, body: currSectionBody, _id: id });
+                    console.log(content);
+                    console.log(sections);
+                    event.sender.send("open", { filename, sections });
                 }
             })
         }
     });
 });
 
-ipcMain.on("save", (event: IpcMainEvent, items: Item[]) => {
+ipcMain.on("save", (event: IpcMainEvent, items: Section[]) => {
     fs.writeFileSync(currentFilePath, getFileString(items));
     event.sender.send("save");
 });
 
-ipcMain.on("saveAs", (event: IpcMainEvent, items: Item[]) => {
+ipcMain.on("saveAs", (event: IpcMainEvent, items: Section[]) => {
     dialog.showSaveDialog(window, {
-        filters: [{name: "todo files", extensions: ["todo"]}],
-    }).then(({filePath}) => {
+        filters: filters,
+    }).then(({ filePath }) => {
         if (!filePath) return;
         currentFilePath = filePath;
         fs.writeFileSync(filePath, getFileString(items));
