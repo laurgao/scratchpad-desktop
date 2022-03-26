@@ -104,17 +104,19 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
                         const rightMostChar = codemirror.doc.getLine(lowestLine).length;
                         codemirror.setCursor({ line: lowestLine, ch: rightMostChar })
                     }
-
-                } else if (sectionKwargs && sectionKwargs.condition === "initiate-on-specified-cursor-pos") {
-                    codemirror.focus()
-                    // @ts-ignore
-                    codemirror.setCursor(sectionKwargs.initialCursorPos)
-                } else if (sectionKwargs && sectionKwargs.condition === "initiate-on-editing-title") {
-                    setEditingTitleValue("# " + (section.title || "")); // In case section.name is undefined for files created before the advent of SectionModel
-                    waitForEl(`${section._id}-edit-section-title`);
+                    else if (sectionKwargs.condition === "initiate-on-specified-cursor-pos") {
+                        codemirror.focus()
+                        // @ts-ignore
+                        codemirror.setCursor(sectionKwargs.initialCursorPos)
+                    } else if (sectionKwargs.condition === "initiate-on-editing-title") {
+                        console.log("Initatiating on editing title.")
+                        setEditingTitleValue("# " + section.title);
+                        waitForEl(`${section._id}-edit-section-title`);
+                    }
                 } else {
-                    // When section opens, focus editor unless we're editing title.
+                    // When section opens, focus editor at the beginning (unless we're editing title).
                     codemirror.focus()
+                    codemirror.setCursor({ line: 0, ch: 0 })
                 }
                 setSectionKwargs(null);
             } else {
@@ -122,7 +124,6 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
             }
         }
     }, [isOpen])
-
 
 
     // Stupid memoized function declaration #3: Set is editing section name
@@ -135,6 +136,22 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
         initiateEditingTitleValueRef.current = initiateEditingTitleValueMemoized
     }, [initiateEditingTitleValueMemoized])
 
+
+    // Stupid memoized function declaration #2: Going to the section below
+    const goToSectionBelowRef = useRef<() => (void)>();
+    const goToSectionBelowMemoized = useCallback(() => {
+        const thisSectionIdx = sectionsOrder.findIndex(id => id.toString() === section._id)
+        if (thisSectionIdx < sectionsOrder.length - 1) {
+            const belowSectionId = sectionsOrder[thisSectionIdx + 1]
+            setSectionKwargs({ sectionId: belowSectionId, condition: "initiate-on-editing-title" })
+            setOpenSectionId(belowSectionId)
+            // TODO: update last opened section ID
+        }
+    }, [sectionsOrder, section._id, setOpenSectionId, setSectionKwargs])
+
+    useEffect(() => {
+        goToSectionBelowRef.current = goToSectionBelowMemoized
+    }, [goToSectionBelowMemoized])
 
     const events = useMemo(() => ({
         cursorActivity: (instance) => {
@@ -150,9 +167,10 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
             // @ts-ignore
             if (willEditTitle) initiateEditingTitleValueRef.current()
 
-            // else if (event.key === "ArrowDown" && cursorInfo.line === instance.doc.lineCount() - 1) {
-            //     goToSectionBelowRef.current()
-            // }
+            else if (event.key === "ArrowDown" && cursorInfo.line === instance.doc.lineCount() - 1) {
+                // @ts-ignore
+                goToSectionBelowRef.current()
+            }
         },
         // blur: (instance) => {
         //     createSectionFromH1Ref.current(instance, true)
@@ -239,7 +257,7 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
                                 // @ts-ignore
                                 codemirror.focus()
                             } else if (e.key === "ArrowUp") {
-                                const thisSectionIdx = sectionsOrder.findIndex(id => id.toString() === section._id)
+                                const thisSectionIdx = sectionsOrder.findIndex(id => id === section._id)
                                 if (thisSectionIdx !== 0) {
                                     // Save name and open the section above this section
                                     saveSectionName();
@@ -250,7 +268,7 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
                                 }
 
                             } else if (e.key === "Backspace" && editingTitleValue.length === 0) {
-                                const thisSectionIdx = sectionsOrder.findIndex(id => id.toString() === section._id)
+                                const thisSectionIdx = sectionsOrder.findIndex(id => id === section._id)
                                 if (thisSectionIdx !== 0) deleteSection()
                             }
                         }}

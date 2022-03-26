@@ -19,7 +19,7 @@ const FileWithSections = ({ filename, sections }: {
     filename: string,
     sections: Section[]
 }) => {
-    const lastOpenSection = "1"; // For now by default open the first section when we open a file.
+    const lastOpenSection = sections[0]._id; // For now by default open the first section when we open a file.
     const [openSectionId, setOpenSectionId] = useState<string | null>(lastOpenSection);
     const [sectionsState, setSectionsState] = useState<Section[]>(sections); // Exposed to the editor components
     const [sectionsStateSaved, setSectionsStateSaved] = useState<Section[]>(sections); // Not exposed to the editor components, represents the content of the markdown files. 
@@ -111,7 +111,7 @@ const FileWithSections = ({ filename, sections }: {
                             isOpen={thisSectionIsOpen}
                             // createSection={createSection}
                             setOpenSectionId={setOpenSectionId}
-                            sectionsOrder={sections.map(s => s._id)}
+                            sectionsOrder={sectionsState.map(s => s._id)}
                             sectionKwargs={sectionKwargs}
                             setSectionKwargs={setSectionKwargs}
                             setSections={setSectionsState}
