@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { FaPlus } from "react-icons/fa";
 import { waitForEl } from "../utils/key";
 import { Section } from "../utils/types";
 import Button from "./headless/Button";
 import Input from "./headless/Input";
 import SectionEditor from "./SectionEditor";
+import { LanguageContext } from "./SettingsModal";
 import H2 from "./style/H2";
 
 const AUTOSAVE_INTERVAL = 1000;
@@ -26,6 +27,8 @@ const FileWithSections = ({ filename, sections }: {
 
     const [newSectionName, setNewSectionName] = useState<string>("");
     const [isCreateNewSection, setIsCreateNewSection] = useState<boolean>(false);
+    const { language, setLanguage } = useContext(LanguageContext);
+
 
     function saveFile(sectionsToSave: Section[]): void {
         // if (!filename) return handleSaveAs();
@@ -43,10 +46,43 @@ const FileWithSections = ({ filename, sections }: {
         if (!eq) setIsSaved(false);
     }, [sectionsState])
 
+    // Change footer to french on mount
+    function waitForEls(selector: string, cb: (x) => void) {
+        const x = document.getElementsByClassName(selector)
+        if (x && x.length > 0) {
+            cb(x)
+        } else {
+            setTimeout(function () {
+                waitForEls(selector, cb);
+            }, 100);
+        }
+        return x
+    }
+    const [lines, setLines] = useState<string>("");
+    const [words, setWords] = useState<string>("");
+    const [cursorPos, setCursor] = useState<string>("");
+
     useEffect(() => {
-        const x = document.getElementsByClassName("autosave")
-        if (x && x.length > 0) x[x.length - 1].innerHTML = eq ? "All changes updated" : isSaved ? "Saved" : "Saving..."
-    }, [isSaved, eq])
+        const openSectionIdx = sections.findIndex(s => s._id === openSectionId)
+        waitForEls("lines", (x) => {
+            setLines(x[openSectionIdx].innerHTML)
+        })
+        waitForEls("words", (x) => {
+            setWords(x[openSectionIdx].innerHTML)
+        })
+
+    }, [openSectionId, sectionsState])
+
+    useEffect(() => {
+        const openSectionIdx = sections.findIndex(s => s._id === openSectionId)
+        const cb = (e) => {
+            waitForEls("cursor", (x) => {
+                setCursor(x[openSectionIdx].innerHTML)
+            })
+        }
+        document.addEventListener('mousemove', cb);
+        return () => document.removeEventListener("mousemove", cb)
+    })
 
     // MAIN AUTOSAVE INTERVAL
     useEffect(() => {
@@ -136,6 +172,18 @@ const FileWithSections = ({ filename, sections }: {
                         />
                     )
                 })}
+            </div>
+
+            {/* Footer */}
+            <div className="fixed z-40 bottom-0 right-0 w-screen text-slate-400 bg-slate-100 border-t border-slate-400 py-2 text-xs">
+                <div className="flex gap-4 mx-4 relative float-right">
+                    <div>
+                        {language === "FR" ? (eq ? "Tous changements sont enregistrés" : isSaved ? "Enregistré" : "En train d'enregistrer...") : (eq ? "All changes updated" : isSaved ? "Saved" : "Saving...")}
+                    </div>
+                    {lines && <div>{language === "FR" ? "Lignes" : "Lines"}: {lines}</div>}
+                    {words && <div>{language === "FR" ? "Mots" : "Words"}: {words}</div>}
+                    <div>{cursorPos}</div>
+                </div>
             </div>
         </>
     )

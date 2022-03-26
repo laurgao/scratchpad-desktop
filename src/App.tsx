@@ -37,7 +37,7 @@ function App() {
     const { language, setLanguage } = useContext(LanguageContext);
 
     const topBarHeight = 40;
-    const footerHeight = 41;
+    const footerHeight = 33;
     const mainContainerHeight = (fileIsOpen) ? `calc(100vh - ${footerHeight}px)` : "100vh"
 
     function handleSave() {
@@ -161,14 +161,14 @@ function App() {
             </div>
             <Container className="flex overflow-y-hidden" width="full" padding={0} style={{ height: mainContainerHeight, paddingTop: topBarHeight }}>
                 {fileIsOpen ? (
-                    <div className="px-4 overflow-y-auto flex-grow pt-4" style={{ height: mainContainerHeight }}>
+                    <div className="px-4 overflow-y-auto flex-grow pt-4">
                         {filename && <FileWithSections
                             filename={filename}
                             sections={content}
                         />}
                     </div>
                 ) : (
-                    <div className="p-4 flex-grow" style={{ height: mainContainerHeight }}>
+                    <div className="p-4 flex-grow">
                         <p className="text-center text-gray-400">{language === "EN" ? "No file open." : "Aucun fichier ouvert."}</p>
                         <div className="flex my-4">
                             <UiButton className="mx-auto" onClick={() => {

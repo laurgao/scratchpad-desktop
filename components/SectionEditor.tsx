@@ -123,7 +123,7 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
                 }
                 setSectionKwargs(null);
             } else {
-                console.warn("Codemirror instance not detected when open this section");
+                console.warn("Codemirror instance not detected when this section was opened.");
             }
         }
     }, [isOpen])

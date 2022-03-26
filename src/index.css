@@ -120,16 +120,7 @@ SCROLLBAR
 }
 
 .EasyMDEContainer div.editor-statusbar {
-    position: fixed;
-    z-index: 40;
-    bottom: 0;
-    right: 0;
-    width: 100vw;
-    color: #94a3b8;
-    /* slate 400 */
-    background-color: #f1f5f9;
-    /* slate 100 */
-    border-top: 1px solid rgb(156, 163, 175);
+    display: none;
 }
 
 /**
