@@ -1,11 +1,11 @@
 import Mousetrap from "mousetrap";
 import "mousetrap-global-bind";
-import React, { ButtonHTMLAttributes, DetailedHTMLProps, useEffect, useState } from "react";
+import { ButtonHTMLAttributes, DetailedHTMLProps, useContext, useEffect, useState } from "react";
 import { FaCog } from "react-icons/fa";
 import FileWithSections from "../components/FileWithSections";
 import Button from "../components/headless/Button";
 import Container from "../components/headless/Container";
-import SettingsModal from "../components/SettingsModal";
+import SettingsModal, { LanguageContext } from "../components/SettingsModal";
 import { Section } from "../utils/types";
 
 const AppBarButton = (props: DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>) => (
@@ -33,6 +33,8 @@ function App() {
     const [filename, setFilename] = useState<string | null>(null);
     const fileIsOpen = !!content;
     const [settingsIsOpen, setSettingsIsOpen] = useState<boolean>(false);
+
+    const { language, setLanguage } = useContext(LanguageContext);
 
     const topBarHeight = 40;
     const footerHeight = 41;
@@ -167,7 +169,7 @@ function App() {
                     </div>
                 ) : (
                     <div className="p-4 flex-grow" style={{ height: mainContainerHeight }}>
-                        <p className="text-center text-gray-400">No todo list open</p>
+                        <p className="text-center text-gray-400">{language === "EN" ? "No file open." : "Aucun fichier ouvert."}</p>
                         <div className="flex my-4">
                             <UiButton className="mx-auto" onClick={() => {
                                 window.Main.Open();

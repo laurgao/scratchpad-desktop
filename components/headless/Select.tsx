@@ -1,3 +1,5 @@
+// Code modified from https://headlessui.dev/react/combobox
+
 import { Combobox, Transition } from '@headlessui/react';
 import { CheckIcon, SelectorIcon } from '@heroicons/react/solid';
 import { Dispatch, Fragment, ReactNode, SetStateAction, useState } from 'react';
@@ -20,9 +22,9 @@ export default function Select({ options, selected, setSelected }: { options: Op
         <div className="w-full">
             <Combobox value={selected} onChange={setSelected}>
                 <div className="relative mt-1">
-                    <div className="relative w-full text-left bg-white rounded-lg shadow-md cursor-default focus:outline-none focus-visible:ring-2 focus-visible:ring-opacity-75 focus-visible:ring-white focus-visible:ring-offset-teal-300 focus-visible:ring-offset-2 sm:text-sm overflow-hidden">
+                    <div className="relative w-full text-left bg-white rounded-lg shadow-md cursor-default focus:outline-none focus-visible:ring-2 focus-visible:ring-opacity-75 focus-visible:ring-white focus-visible:ring-offset-blue-300 focus-visible:ring-offset-2 sm:text-sm overflow-hidden">
                         <Combobox.Input
-                            className="w-full border-none focus:ring-0 py-2 pl-3 pr-10 text-sm leading-5 text-gray-900"
+                            className="w-full border-none focus:ring-0 focus-visible:outline-none py-2 pl-3 pr-10 text-sm leading-5 text-gray-900"
                             displayValue={(option: Option) => option.label}
                             onChange={(event) => setQuery(event.target.value)}
                         />
