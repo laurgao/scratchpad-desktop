@@ -75,7 +75,8 @@ const FileWithSections = ({ filename, sections }: {
         <>
             {/* File title */}
             <div className="mb-4">
-                {<H2>{filename}</H2>}
+                {/* Display filename without the `.md` */}
+                {<H2>{filename.slice(0, -3)}</H2>}
             </div>
 
             {/* Create new section form */}
@@ -88,7 +89,25 @@ const FileWithSections = ({ filename, sections }: {
                                 setValue={setNewSectionName}
                                 id="new-section"
                                 placeholder="New section name"
-
+                                onKeyDown={e => {
+                                    if (e.key === "Enter") {
+                                        // Create the section
+                                        const newId = (sectionsState.length + 2).toString()
+                                        const newSection: Section = {
+                                            title: newSectionName || "",
+                                            body: "",
+                                            _id: newId,
+                                        }
+                                        setSectionsState(prev => [...prev, newSection])
+                                        setOpenSectionId(newId);
+                                        setIsCreateNewSection(false);
+                                        setNewSectionName("");
+                                    }
+                                    else if (e.key === "Escape") {
+                                        setIsCreateNewSection(false);
+                                        setNewSectionName("");
+                                    }
+                                }}
                             />
                             {!!newSectionName && <p className="text-xs">Enter to save<br />Esc to exit</p>}
                         </div>

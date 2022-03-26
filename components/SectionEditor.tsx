@@ -106,8 +106,11 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
                     }
                     else if (sectionKwargs.condition === "initiate-on-specified-cursor-pos") {
                         codemirror.focus()
-                        // @ts-ignore
-                        codemirror.setCursor(sectionKwargs.initialCursorPos)
+                        if (sectionKwargs.initialCursorPos) {
+                            codemirror.setCursor(sectionKwargs.initialCursorPos)
+                        } else {
+                            console.warn("No initial cursor pos specified when sectionKwargs.condition === 'initiate-on-specified-cursor-pos'. Codemirror will be focused but no cursor will be set.")
+                        }
                     } else if (sectionKwargs.condition === "initiate-on-editing-title") {
                         console.log("Initatiating on editing title.")
                         setEditingTitleValue("# " + section.title);
@@ -299,7 +302,6 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
                     onChange={value => onChange(value)}
                     value={section.body}
                     options={mdeOptions}
-                    className="text-lg"
                     getCodemirrorInstance={getCmInstanceCallback}
                     events={events}
                 />
