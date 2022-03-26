@@ -83,6 +83,7 @@ const FileWithSections = ({ filename, sections }: {
                             sectionKwargs={sectionKwargs}
                             setSectionKwargs={setSectionKwargs}
                             saveSection={saveSection}
+                            setSections={setSectionss}
                         />
                     )
                 })}

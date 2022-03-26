@@ -13,7 +13,7 @@ import Input from "./Input";
 
 const AUTOSAVE_INTERVAL = 1000;
 
-const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, sectionKwargs, setSectionKwargs, saveSection }: {
+const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, sectionKwargs, setSectionKwargs, saveSection, setSections }: {
     section: Section,
     isOpen: boolean,
     sectionsOrder: string[],
@@ -21,6 +21,7 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
     sectionKwargs: SectionKwargsObj | null,
     setSectionKwargs: Dispatch<SetStateAction<SectionKwargsObj | null>>,
     saveSection: (id: string, title: string, body: string, setIsSaved: Dispatch<SetStateAction<boolean>>) => void,
+    setSections: Dispatch<SetStateAction<Section[]>>
 }) => {
     const [editingTitleValue, setEditingTitleValue] = useState<string | null>(null);
     // codemirror
@@ -184,6 +185,7 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
     const saveSectionName = () => {
         if (editingTitleValue && editingTitleValue.substring(0, 2) === "# ") {
             saveSection(section._id, editingTitleValue.substring(2), body, setIsSaved)
+            setEditingTitleValue(null);
         } else {
             deleteSection()
         }
@@ -211,8 +213,9 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
 `
         addBody += body
 
-        // This is rlly jank
-        // TODO: append this body to prev body. delete this section. update file.lastOpenSection
+        // append this body to prev body. delete this section. 
+        // TODO: update file.lastOpenSection
+        setSections(prevSections => prevSections.filter(s => s._id !== section._id).map(s => s._id === prevSectionId ? { ...s, body: s.body + addBody } : s))
     }
 
     const onChange = useCallback((value: string) => {
@@ -250,18 +253,17 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
                             else if (e.key === "ArrowDown" || e.key === "Enter") {
                                 e.preventDefault()
                                 saveSectionName()
-                                setEditingTitleValue(null);
                                 // @ts-ignore
                                 codemirror.focus()
                             } else if (e.key === "ArrowUp") {
                                 const thisSectionIdx = sectionsOrder.findIndex(id => id.toString() === section._id)
                                 if (thisSectionIdx !== 0) {
                                     // Save name and open the section above this section
-                                    // saveSectionName();
-                                    // const prevSectionId = sectionsOrder[thisSectionIdx - 1]
-                                    // setSectionKwargs({ sectionId: prevSectionId, condition: "initiate-with-cursor-on-bottom" })
-                                    // setOpenSectionId(prevSectionId)
-                                    // TODO: save section.
+                                    saveSectionName();
+                                    const prevSectionId = sectionsOrder[thisSectionIdx - 1]
+                                    setSectionKwargs({ sectionId: prevSectionId, condition: "initiate-with-cursor-on-bottom" })
+                                    setOpenSectionId(prevSectionId)
+                                    // TODO: save last opened section id.
                                 }
 
                             } else if (e.key === "Backspace" && editingTitleValue.length === 0) {
