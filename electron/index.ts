@@ -94,7 +94,6 @@ ipcMain.on("open", (event: IpcMainEvent) => {
                 if (err) {
                     console.log("error");
                 } else {
-                    // // check if format is correct
                     const lines = content.split(/\r\n|\n\r|\n|\r/);
                     let id = 1;
 
@@ -104,16 +103,16 @@ ipcMain.on("open", (event: IpcMainEvent) => {
                     for (let line of lines) {
                         // starts with # followed by space
                         let match = line.match(/^#+ /);
-                        if (match && match.index === 0) {
-                            if (!(currSectionBody === null || currSectionTitle === null)) sections.push({ title: currSectionTitle, body: currSectionBody });
+                        if (match && match.index === 0 && match[0] == "# ") {
+                            if (!(currSectionBody === null || currSectionTitle === null)) sections.push({ title: currSectionTitle, body: currSectionBody, _id: id.toString() });
+                            id++;
                             currSectionBody = "";
-                            currSectionTitle = line;
+                            currSectionTitle = line.slice(2); // Get rid of `# `
                         } else {
                             currSectionBody += (line + "\n");
                         }
-                        id++;
                     }
-                    sections.push({ title: currSectionTitle, body: currSectionBody, _id: id });
+                    sections.push({ title: currSectionTitle, body: currSectionBody, _id: id.toString() });
                     console.log(content);
                     console.log(sections);
                     event.sender.send("open", { filename, sections });

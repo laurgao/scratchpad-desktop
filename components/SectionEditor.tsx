@@ -24,7 +24,7 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
 }) => {
     const [editingTitleValue, setEditingTitleValue] = useState<string | null>(null);
     // codemirror
-    const [cm, setCodemirrorInstance] = useState<Editor | null>(null);
+    const [codemirror, setCodemirrorInstance] = useState<Editor | null>(null);
     const getCmInstanceCallback = useCallback((editor: Editor) => {
         setCodemirrorInstance(editor);
     }, []);
@@ -84,40 +84,40 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
 
     useEffect(() => {
         if (isOpen && !editingTitleValue) {
-            if (sectionKwargs && sectionKwargs.sectionId === section._id) {
-                // Run kwargs when section opens
-                if (sectionKwargs.condition === "initiate-with-cursor-on-bottom") {
-                    // @ts-ignore
-                    // const codemirror = editorRef.current.simpleMde.codemirror;
-                    // codemirror.focus()
-                    // const lowestLine = codemirror.doc.lineCount() - 1
-                    // const rightMostChar = codemirror.doc.getLine(lowestLine).length;
-                    // codemirror.setCursor({ line: lowestLine, ch: rightMostChar })
+            if (codemirror) {
+                if (sectionKwargs && sectionKwargs.sectionId === section._id) {
+                    // Run kwargs when section opens
+                    if (sectionKwargs.condition === "initiate-with-cursor-on-bottom") {
+                        // @ts-ignore
+                        codemirror.focus()
+                        // @ts-ignore
+                        const lowestLine = codemirror.doc.lineCount() - 1
+                        // @ts-ignore
+                        const rightMostChar = codemirror.doc.getLine(lowestLine).length;
+                        codemirror.setCursor({ line: lowestLine, ch: rightMostChar })
+                    }
 
-                } else if (sectionKwargs.condition === "initiate-on-specified-cursor-pos") {
+                } else if (sectionKwargs && sectionKwargs.condition === "initiate-on-specified-cursor-pos") {
+                    codemirror.focus()
                     // @ts-ignore
-                    // const codemirror = editorRef.current.simpleMde.codemirror;
-                    // codemirror.focus()
-                    // codemirror.setCursor(sectionKwargs.initialCursorPos)
-                } else if (sectionKwargs.condition === "initiate-on-editing-title") {
+                    codemirror.setCursor(sectionKwargs.initialCursorPos)
+                } else if (sectionKwargs && sectionKwargs.condition === "initiate-on-editing-title") {
                     setEditingTitleValue("# " + (section.title || "")); // In case section.name is undefined for files created before the advent of SectionModel
                     waitForEl(`${section._id}-edit-section-title`);
+                } else {
+                    // When section opens, focus editor unless we're editing title.
+                    codemirror.focus()
                 }
-
                 setSectionKwargs(null);
-
             } else {
-                // When section opens, focus editor unless we're editing title.
-                // @ts-ignore
-                // const codemirror = editorRef.current.simpleMde.codemirror;
-                // codemirror.focus()
+                console.warn("Codemirror instance not detected when open this section");
             }
         }
     }, [isOpen])
 
     // Autosave stuff
     const [body, setBody] = useState<string>(section.body);
-    useEffect(() => { /*if (editorContent !== section.body)*/ setIsSaved(false); }, [body])
+    useEffect(() => { if (body !== section.body) setIsSaved(false); }, [body])
 
     const [isSaved, setIsSaved] = useState<boolean>(true);
     useEffect(() => {
@@ -131,10 +131,8 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
 
         }, AUTOSAVE_INTERVAL);
 
-        // This represents the unmount function, in which you need to clear your interval to prevent memory leaks.
         return () => {
             clearInterval(interval);
-            // if (!isSaved) saveSection(section._id, body)
         }
     }, [body, isSaved])
 

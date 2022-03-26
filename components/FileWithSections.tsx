@@ -18,19 +18,19 @@ const FileWithSections = ({ filename, sections }: {
     filename: string,
     sections: Section[]
 }) => {
-    const [openSectionId, setOpenSectionId] = useState<string | null>(null);
+    const lastOpenSection = "1"; // For now by default open the first section when we open a file.
+    const [openSectionId, setOpenSectionId] = useState<string | null>(lastOpenSection);
+    const [sectionss, setSectionss] = useState<Section[]>(sections);
 
     const [newSectionName, setNewSectionName] = useState<string>("");
     const [isCreateNewSection, setIsCreateNewSection] = useState<boolean>(false);
-
-
-
 
     function saveSection(sectionId, sectiontitle, body, setIsSaved: Dispatch<SetStateAction<boolean>>) {
         // if (!filename) return handleSaveAs();
         const newSections = sections.map(s => s._id === sectionId ? { ...s, body, title: sectiontitle } : s);
         window.Main.on("save", () => {
             setIsSaved(true);
+            setSectionss(newSections);
         });
         window.Main.Save(newSections);
     }
@@ -70,8 +70,8 @@ const FileWithSections = ({ filename, sections }: {
                 </div>
 
                 {/* File sections */}
-                {sections.map(s => {
-                    const thisSectionIsOpen = openSectionId == s._id
+                {sectionss.map(s => {
+                    const thisSectionIsOpen = openSectionId === s._id
                     return (
                         <SectionEditor
                             key={s._id}
