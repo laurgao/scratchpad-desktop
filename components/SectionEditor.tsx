@@ -10,17 +10,13 @@ import { Section } from "../utils/types";
 import { SectionKwargsObj } from "./FileWithSections";
 import Input from "./Input";
 
-
-const AUTOSAVE_INTERVAL = 1000;
-
-const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, sectionKwargs, setSectionKwargs, saveSection, setSections }: {
+const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, sectionKwargs, setSectionKwargs, setSections }: {
     section: Section,
     isOpen: boolean,
     sectionsOrder: string[],
     setOpenSectionId: Dispatch<SetStateAction<string | null>>,
     sectionKwargs: SectionKwargsObj | null,
     setSectionKwargs: Dispatch<SetStateAction<SectionKwargsObj | null>>,
-    saveSection: (id: string, title: string, body: string, setIsSaved: Dispatch<SetStateAction<boolean>>) => void,
     setSections: Dispatch<SetStateAction<Section[]>>
 }) => {
     const [editingTitleValue, setEditingTitleValue] = useState<string | null>(null);
@@ -152,39 +148,19 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
         // }
     }), [])
 
-    // Autosave stuff
+
+    // For editing section body
     const [body, setBody] = useState<string>(section.body);
-    useEffect(() => { if (body !== section.body) setIsSaved(false); }, [body])
-
-    const [isSaved, setIsSaved] = useState<boolean>(true);
-    useEffect(() => {
-        const x = document.getElementsByClassName("autosave")
-        if (x && x.length > 0) x[x.length - 1].innerHTML = isSaved ? "Saved" : "Saving..."
-    }, [isSaved])
-    // MAIN AUTOSAVE INTERVAL
-    useEffect(() => {
-        const interval = setInterval(() => {
-            if (!isSaved) saveSection(section._id, section.title, body, setIsSaved)
-
-        }, AUTOSAVE_INTERVAL);
-
-        return () => {
-            clearInterval(interval);
-        }
-    }, [body, isSaved])
-
-    useEffect(() => {
-        // Save section when component is unmounted
-        return () => {
-            if (!isSaved) saveSection(section._id, section.title, body, setIsSaved)
-        }
-    }, [])
-
+    const onChange = useCallback((value: string) => {
+        setBody(value);
+        setSections(prevSections => prevSections.map(s => s._id === section._id ? { ...s, body: value } : s))
+    }, []);
 
     // For editing section name
     const saveSectionName = () => {
         if (editingTitleValue && editingTitleValue.substring(0, 2) === "# ") {
-            saveSection(section._id, editingTitleValue.substring(2), body, setIsSaved)
+            // saveSection(section._id, editingTitleValue.substring(2), body, setIsSaved)
+            setSections(prev => prev.map(s => s._id === section._id ? { ...s, title: editingTitleValue.substring(2) } : s));
             setEditingTitleValue(null);
         } else {
             deleteSection()
@@ -215,12 +191,8 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
 
         // append this body to prev body. delete this section. 
         // TODO: update file.lastOpenSection
-        setSections(prevSections => prevSections.filter(s => s._id !== section._id).map(s => s._id === prevSectionId ? { ...s, body: s.body + addBody } : s))
+        setSections(prev => prev.filter(s => s._id !== section._id).map(s => s._id === prevSectionId ? { ...s, body: s.body + addBody } : s))
     }
-
-    const onChange = useCallback((value: string) => {
-        setBody(value);
-    }, []);
 
     const mdeOptions = useMemo(() => {
         return {

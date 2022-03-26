@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@200;300;400;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -12,6 +12,124 @@
 
 .undraggable {
     -webkit-app-region: no-drag;
+}
+
+/* Scratchpad theme */
+
+body {
+    @apply bg-gray-50;
+    font-family: 'Inconsolata', monospace;
+}
+
+.loading-spinner {
+    border-radius: 50%;
+    position: absolute;
+    top: calc(50% - 0.5rem);
+    left: calc(50% - 0.5rem);
+    width: 1rem;
+    height: 1rem;
+    padding: 0.2rem;
+    background: conic-gradient(rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0) 75%) border-box;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(-360deg);
+    }
+}
+
+.loading-bar {
+    width: 100px;
+    height: 20px;
+    border-radius: 10px;
+    background-color: rgb(59, 130, 246);
+    animation: loading-swipe 1s linear infinite;
+}
+
+@keyframes loading-swipe {
+    0% {
+        transform: translateX(-100px);
+    }
+
+    100% {
+        transform: translateX(100vw)
+    }
+}
+
+/**********
+SCROLLBAR
+***********/
+
+/* width */
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: rgb(191, 219, 254);
+    /* @apply bg-blue-200 */
+    border-radius: 10px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: rgb(96, 165, 250);
+    /* @apply bg-blue-400 */
+    border-radius: 10px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:active {
+    background: rgb(59, 130, 246);
+    /* @apply bg-blue-500 */
+}
+
+/* The small square between a vertical and horizontal scrollbar */
+::-webkit-scrollbar-corner {
+    background-color: transparent;
+}
+
+/* Custom MDE styles */
+.EasyMDEContainer .editor-toolbar {
+    font-size: 1rem;
+    border: 0;
+    padding-left: 0;
+    padding-right: 0;
+    position: sticky;
+    top: 4rem;
+    z-index: 5;
+    background-color: white;
+}
+
+.EasyMDEContainer div.CodeMirror {
+    border: 0;
+    padding-top: 2rem;
+    padding-left: 0;
+    padding-right: 0;
+    background-color: inherit;
+}
+
+.EasyMDEContainer div.editor-statusbar {
+    position: fixed;
+    z-index: 40;
+    bottom: 0;
+    right: 0;
+    width: 100vw;
+    color: #94a3b8;
+    /* slate 400 */
+    background-color: #f1f5f9;
+    /* slate 100 */
+    border-top: 1px solid rgb(156, 163, 175);
 }
 
 /**

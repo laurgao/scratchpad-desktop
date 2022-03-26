@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FaPlus } from "react-icons/fa";
 import { waitForEl } from "../utils/key";
 import { Section } from "../utils/types";
@@ -8,6 +8,7 @@ import Input from "./Input";
 import SectionEditor from "./SectionEditor";
 
 const AUTOSAVE_INTERVAL = 1000;
+
 export interface SectionKwargsObj {
     sectionId: string,
     condition: "initiate-on-editing-title" | "initiate-with-cursor-on-bottom" | "initiate-on-specified-cursor-pos",
@@ -20,20 +21,52 @@ const FileWithSections = ({ filename, sections }: {
 }) => {
     const lastOpenSection = "1"; // For now by default open the first section when we open a file.
     const [openSectionId, setOpenSectionId] = useState<string | null>(lastOpenSection);
-    const [sectionss, setSectionss] = useState<Section[]>(sections);
+    const [sectionsState, setSectionsState] = useState<Section[]>(sections); // Exposed to the editor components
+    const [sectionsStateSaved, setSectionsStateSaved] = useState<Section[]>(sections); // Not exposed to the editor components, represents the content of the markdown files. 
+
 
     const [newSectionName, setNewSectionName] = useState<string>("");
     const [isCreateNewSection, setIsCreateNewSection] = useState<boolean>(false);
 
-    function saveSection(sectionId, sectiontitle, body, setIsSaved: Dispatch<SetStateAction<boolean>>) {
+    function saveFile(sectionsToSave: Section[]): void {
         // if (!filename) return handleSaveAs();
-        const newSections = sections.map(s => s._id === sectionId ? { ...s, body, title: sectiontitle } : s);
         window.Main.on("save", () => {
             setIsSaved(true);
-            setSectionss(newSections);
+            setSectionsStateSaved(sectionsToSave);
         });
-        window.Main.Save(newSections);
+        window.Main.Save(sectionsToSave);
     }
+
+    // Autosave stuff
+    const eq = sectionsStateSaved.every((s, i) => Object.keys(s).every(k => s[k] === sectionsState[i][k])) // check the contents of the 2 vars
+    const [isSaved, setIsSaved] = useState<boolean>(true);
+    useEffect(() => {
+        if (!eq) setIsSaved(false);
+    }, [sectionsState])
+
+    useEffect(() => {
+        const x = document.getElementsByClassName("autosave")
+        if (x && x.length > 0) x[x.length - 1].innerHTML = eq ? "All changes updated" : isSaved ? "Saved" : "Saving..."
+    }, [isSaved, eq])
+
+    // MAIN AUTOSAVE INTERVAL
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (!isSaved) saveFile(sectionsState)
+
+        }, AUTOSAVE_INTERVAL);
+
+        return () => {
+            clearInterval(interval);
+        }
+    }, [sectionsState, isSaved])
+
+    useEffect(() => {
+        // Save section when component is unmounted
+        return () => {
+            if (!isSaved) saveFile(sectionsState);
+        }
+    }, [])
 
 
     // Used for passing information between sections
@@ -70,7 +103,7 @@ const FileWithSections = ({ filename, sections }: {
                 </div>
 
                 {/* File sections */}
-                {sectionss.map(s => {
+                {sectionsState.map(s => {
                     const thisSectionIsOpen = openSectionId === s._id
                     return (
                         <SectionEditor
@@ -82,8 +115,7 @@ const FileWithSections = ({ filename, sections }: {
                             sectionsOrder={sections.map(s => s._id)}
                             sectionKwargs={sectionKwargs}
                             setSectionKwargs={setSectionKwargs}
-                            saveSection={saveSection}
-                            setSections={setSectionss}
+                            setSections={setSectionsState}
                         />
                     )
                 })}
