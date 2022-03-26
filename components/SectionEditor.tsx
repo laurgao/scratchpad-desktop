@@ -1,24 +1,33 @@
 // import "easymde/dist/easymde.min.css";
-import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
+import { Editor } from "codemirror";
+import SimpleMDE from "easymde";
+import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FaAngleDown, FaAngleLeft } from "react-icons/fa";
 import Accordion from "react-robust-accordion";
-import SimpleMDE from "react-simplemde-editor";
+import SimpleMDEEditor from "react-simplemde-editor";
 import { waitForEl } from "../utils/key";
 import { Section } from "../utils/types";
 import { SectionKwargsObj } from "./FileWithSections";
 import Input from "./Input";
 
-const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, sectionKwargs, setSectionKwargs }: {
+
+const AUTOSAVE_INTERVAL = 1000;
+
+const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, sectionKwargs, setSectionKwargs, saveSection }: {
     section: Section,
     isOpen: boolean,
     sectionsOrder: string[],
     setOpenSectionId: Dispatch<SetStateAction<string | null>>,
     sectionKwargs: SectionKwargsObj | null,
     setSectionKwargs: Dispatch<SetStateAction<SectionKwargsObj | null>>,
+    saveSection: (id: string, title: string, body: string, setIsSaved: Dispatch<SetStateAction<boolean>>) => void,
 }) => {
-    const editorRef = useRef();
     const [editingTitleValue, setEditingTitleValue] = useState<string | null>(null);
-    console.log(editorRef);
+    // codemirror
+    const [cm, setCodemirrorInstance] = useState<Editor | null>(null);
+    const getCmInstanceCallback = useCallback((editor: Editor) => {
+        setCodemirrorInstance(editor);
+    }, []);
 
     // H1 new section stuff
     const [lastIsH1, setLastIsH1] = useState<boolean>(false)
@@ -108,7 +117,33 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
 
     // Autosave stuff
     const [body, setBody] = useState<string>(section.body);
+    useEffect(() => { /*if (editorContent !== section.body)*/ setIsSaved(false); }, [body])
 
+    const [isSaved, setIsSaved] = useState<boolean>(true);
+    useEffect(() => {
+        const x = document.getElementsByClassName("autosave")
+        if (x && x.length > 0) x[x.length - 1].innerHTML = isSaved ? "Saved" : "Saving..."
+    }, [isSaved])
+    // MAIN AUTOSAVE INTERVAL
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (!isSaved) saveSection(section._id, section.title, body, setIsSaved)
+
+        }, AUTOSAVE_INTERVAL);
+
+        // This represents the unmount function, in which you need to clear your interval to prevent memory leaks.
+        return () => {
+            clearInterval(interval);
+            // if (!isSaved) saveSection(section._id, body)
+        }
+    }, [body, isSaved])
+
+    useEffect(() => {
+        // Save section when component is unmounted
+        return () => {
+            if (!isSaved) saveSection(section._id, section.title, body, setIsSaved)
+        }
+    }, [])
 
 
     // For editing section name
@@ -149,6 +184,15 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
 
     const onChange = useCallback((value: string) => {
         setBody(value);
+    }, []);
+
+    const mdeOptions = useMemo(() => {
+        return {
+            autofocus: true,
+            spellChecker: false,
+            placeholder: "Unload your working memory ✨ ...",
+            toolbar: []
+        } as SimpleMDE.Options;
     }, []);
 
 
@@ -213,21 +257,14 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
                 }}
                 openState={isOpen}
             >
-                <SimpleMDE
+                <SimpleMDEEditor
                     // @ts-ignore
-                    ref={editorRef}
-                    // what the fuck mate the problem is with how when you setState it refreshes the app so the editor is unfocused?????
-                    // blehblehbleh.
-                    // usecallback makes no diff.
-                    // wait is what happpens that a new instance of simplemde is made bc unmemoized shit?
-                    // onChange={onChange}
-                    // value={body}
-                    options={{
-                        spellChecker: false,
-                        placeholder: "Unload your working memory ✨ ...",
-                        toolbar: []
-                    }}
+                    onChange={value => onChange(value)}
+                    value={section.body}
+                    options={mdeOptions}
                     className="text-lg"
+                    getCodemirrorInstance={getCmInstanceCallback}
+
                 />
             </Accordion>
             <hr />

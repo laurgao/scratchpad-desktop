@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
 import { FaPlus } from "react-icons/fa";
 import { waitForEl } from "../utils/key";
 import { Section } from "../utils/types";
@@ -7,6 +7,7 @@ import H2 from "./H2";
 import Input from "./Input";
 import SectionEditor from "./SectionEditor";
 
+const AUTOSAVE_INTERVAL = 1000;
 export interface SectionKwargsObj {
     sectionId: string,
     condition: "initiate-on-editing-title" | "initiate-with-cursor-on-bottom" | "initiate-on-specified-cursor-pos",
@@ -21,6 +22,18 @@ const FileWithSections = ({ filename, sections }: {
 
     const [newSectionName, setNewSectionName] = useState<string>("");
     const [isCreateNewSection, setIsCreateNewSection] = useState<boolean>(false);
+
+
+
+
+    function saveSection(sectionId, sectiontitle, body, setIsSaved: Dispatch<SetStateAction<boolean>>) {
+        // if (!filename) return handleSaveAs();
+        const newSections = sections.map(s => s._id === sectionId ? { ...s, body, title: sectiontitle } : s);
+        window.Main.on("save", () => {
+            setIsSaved(true);
+        });
+        window.Main.Save(newSections);
+    }
 
 
     // Used for passing information between sections
@@ -69,6 +82,7 @@ const FileWithSections = ({ filename, sections }: {
                             sectionsOrder={sections.map(s => s._id)}
                             sectionKwargs={sectionKwargs}
                             setSectionKwargs={setSectionKwargs}
+                            saveSection={saveSection}
                         />
                     )
                 })}
