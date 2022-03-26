@@ -237,8 +237,10 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
     return (
         <div className="relative">
             {(editingTitleValue || typeof (editingTitleValue) === "string") && (
-                <div className="absolute left-2">
+                // Subtract width of the FaAngleDown
+                <div className="absolute left-2" style={{ width: "calc(100% - 40px)" }}>
                     <Input
+                        noMargin
                         value={editingTitleValue}
                         // @ts-ignore
                         setValue={setEditingTitleValue}
@@ -250,7 +252,7 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
                             if (e.key === "Escape") {
                                 setEditingTitleValue(null)
                                 // @ts-ignore
-                                // editorRef.current.simpleMde.codemirror.focus()
+                                codemirror.focus()
                             }
                             else if (e.key === "ArrowDown" || e.key === "Enter") {
                                 e.preventDefault()
@@ -278,7 +280,7 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
             )}
             <Accordion
                 label={
-                    <div className="flex p-2 items-center" style={{ height: "30px" }}>
+                    <div className="flex px-2 items-center" style={{ height: "30px" }}>
                         {!(editingTitleValue || typeof (editingTitleValue) === "string") && (<p>{section.title}</p>)}
                         {isOpen ? <FaAngleDown size={14} className="ml-auto" /> : <FaAngleLeft size={14} className="ml-auto" />}
                     </div>
@@ -302,6 +304,7 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
                     options={mdeOptions}
                     getCodemirrorInstance={getCmInstanceCallback}
                     events={events}
+                    className="px-2"
                 />
             </Accordion>
             <hr />

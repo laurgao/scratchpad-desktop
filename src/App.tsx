@@ -1,19 +1,22 @@
 import Mousetrap from "mousetrap";
 import "mousetrap-global-bind";
 import React, { ButtonHTMLAttributes, DetailedHTMLProps, useEffect, useState } from "react";
+import { FaCog } from "react-icons/fa";
 import FileWithSections from "../components/FileWithSections";
+import Button from "../components/headless/Button";
 import Container from "../components/headless/Container";
+import SettingsModal from "../components/SettingsModal";
 import { Section } from "../utils/types";
 
 const AppBarButton = (props: DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>) => (
     <button {...props} className={`${props.className || ""} hover:bg-gray-100 h-full w-10`} />
 );
 
-const UiButton2 = (props: DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>) => (
+export const UiButton = (props: DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>) => (
     <button {...props} className={`${props.className || ""} bg-blue-400 hover:bg-blue-700 text-white transition font-semibold py-1 px-2 text-sm border rounded`} />
 );
 
-const UiButton = (props: DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>) => (
+const UiButton2 = (props: DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>) => (
     <button {...props} className={`${props.className || ""} py-1 px-2 text-sm text-gray-500 border rounded`} />
 );
 
@@ -29,9 +32,10 @@ function App() {
     const [content, setContent] = useState<Section[] | null>(null);
     const [filename, setFilename] = useState<string | null>(null);
     const fileIsOpen = !!content;
+    const [settingsIsOpen, setSettingsIsOpen] = useState<boolean>(false);
 
     const topBarHeight = 40;
-    const footerHeight = 44;
+    const footerHeight = 41;
     const mainContainerHeight = (fileIsOpen) ? `calc(100vh - ${footerHeight}px)` : "100vh"
 
     function handleSave() {
@@ -121,7 +125,7 @@ function App() {
 
     return (
         <>
-            <div className="w-full flex items-center h-10 draggable text-sm fixed bg-gray-50 z-50">
+            <div className="w-full flex items-center h-10 draggable text-sm fixed bg-gray-200 z-50">
                 <span className="ml-4">
                     {/* TOOD: saved status in the title. */}
                     {`${content ? (filename || "New list*") : "Scratchpad"}${(!!filename && !!content && !!fileContent && !(content === fileContent) ? "*" : "")}`}
@@ -155,14 +159,14 @@ function App() {
             </div>
             <Container className="flex overflow-y-hidden" width="full" padding={0} style={{ height: mainContainerHeight, paddingTop: topBarHeight }}>
                 {fileIsOpen ? (
-                    <div className="px-4 overflow-y-auto">
+                    <div className="px-4 overflow-y-auto flex-grow pt-4" style={{ height: mainContainerHeight }}>
                         {filename && <FileWithSections
                             filename={filename}
                             sections={content}
                         />}
                     </div>
                 ) : (
-                    <div className="p-4">
+                    <div className="p-4 flex-grow" style={{ height: mainContainerHeight }}>
                         <p className="text-center text-gray-400">No todo list open</p>
                         <div className="flex my-4">
                             <UiButton className="mx-auto" onClick={() => {
@@ -172,7 +176,12 @@ function App() {
                         </div>
                     </div>
                 )}
+                <div className="w-12 flex flex-col justify-end items-center bg-gray-100 gap-2" >
+                    <Button onClick={() => setSettingsIsOpen(true)}><FaCog className="text-gray-400" size={20} /></Button>
+                </div>
             </Container>
+
+            <SettingsModal isOpen={settingsIsOpen} onClose={() => setSettingsIsOpen(false)} />
         </>
     );
 }
