@@ -174,7 +174,7 @@ function App() {
                             <UiButton className="mx-auto" onClick={() => {
                                 window.Main.Open();
                                 setIsAwaitingOpen(true);
-                            }}>Open</UiButton>
+                            }}>{language === "FR" ? "Ouvrez" : "Open"}</UiButton>
                         </div>
                     </div>
                 )}

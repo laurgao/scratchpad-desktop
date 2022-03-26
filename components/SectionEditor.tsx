@@ -1,7 +1,7 @@
 // import "easymde/dist/easymde.min.css";
 import { Editor } from "codemirror";
 import SimpleMDE from "easymde";
-import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { FaAngleDown, FaAngleLeft } from "react-icons/fa";
 import Accordion from "react-robust-accordion";
 import SimpleMDEEditor from "react-simplemde-editor";
@@ -9,6 +9,7 @@ import { waitForEl } from "../utils/key";
 import { Section } from "../utils/types";
 import { SectionKwargsObj } from "./FileWithSections";
 import Input from "./headless/Input";
+import { LanguageContext } from "./SettingsModal";
 
 const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, sectionKwargs, setSectionKwargs, setSections }: {
     section: Section,
@@ -19,6 +20,8 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
     setSectionKwargs: Dispatch<SetStateAction<SectionKwargsObj | null>>,
     setSections: Dispatch<SetStateAction<Section[]>>
 }) => {
+    const { language, setLanguage } = useContext(LanguageContext);
+
     const [editingTitleValue, setEditingTitleValue] = useState<string | null>(null);
     // codemirror
     const [codemirror, setCodemirrorInstance] = useState<Editor | null>(null);
@@ -228,10 +231,11 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
         return {
             autofocus: true,
             spellChecker: false,
-            placeholder: "Unload your working memory ✨ ...",
+            // Vous déchargez ?
+            placeholder: language === "FR" ? "Déchargez votre mémoire de travail" : "Unload your working memory ✨ ...",
             toolbar: []
         } as SimpleMDE.Options;
-    }, []);
+    }, [language]);
 
 
     return (
@@ -245,7 +249,7 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
                         // @ts-ignore
                         setValue={setEditingTitleValue}
                         id={`${section._id}-edit-section-title`}
-                        placeholder="# Section name"
+                        placeholder={language === "FR" ? "Nom de cette partie" : "# Section name"}
                         type="text"
                         onBlur={() => saveSectionName()}
                         onKeyDown={e => {

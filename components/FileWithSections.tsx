@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from 'react';
 import { FaPlus } from "react-icons/fa";
 import { waitForEl } from "../utils/key";
 import { Section } from "../utils/types";
+import Footer from "./Footer";
 import Button from "./headless/Button";
 import Input from "./headless/Input";
 import SectionEditor from "./SectionEditor";
@@ -46,43 +47,6 @@ const FileWithSections = ({ filename, sections }: {
         if (!eq) setIsSaved(false);
     }, [sectionsState])
 
-    // Change footer to french on mount
-    function waitForEls(selector: string, cb: (x) => void) {
-        const x = document.getElementsByClassName(selector)
-        if (x && x.length > 0) {
-            cb(x)
-        } else {
-            setTimeout(function () {
-                waitForEls(selector, cb);
-            }, 100);
-        }
-        return x
-    }
-    const [lines, setLines] = useState<string>("");
-    const [words, setWords] = useState<string>("");
-    const [cursorPos, setCursor] = useState<string>("");
-
-    useEffect(() => {
-        const openSectionIdx = sections.findIndex(s => s._id === openSectionId)
-        waitForEls("lines", (x) => {
-            setLines(x[openSectionIdx].innerHTML)
-        })
-        waitForEls("words", (x) => {
-            setWords(x[openSectionIdx].innerHTML)
-        })
-
-    }, [openSectionId, sectionsState])
-
-    useEffect(() => {
-        const openSectionIdx = sections.findIndex(s => s._id === openSectionId)
-        const cb = (e) => {
-            waitForEls("cursor", (x) => {
-                setCursor(x[openSectionIdx].innerHTML)
-            })
-        }
-        document.addEventListener('mousemove', cb);
-        return () => document.removeEventListener("mousemove", cb)
-    })
 
     // MAIN AUTOSAVE INTERVAL
     useEffect(() => {
@@ -124,7 +88,7 @@ const FileWithSections = ({ filename, sections }: {
                                 value={newSectionName}
                                 setValue={setNewSectionName}
                                 id="new-section"
-                                placeholder="New section name"
+                                placeholder={language === "FR" ? "Nom de la nouvelle partie" : "New section name"}
                                 onKeyDown={e => {
                                     if (e.key === "Enter") {
                                         // Create the section
@@ -175,16 +139,7 @@ const FileWithSections = ({ filename, sections }: {
             </div>
 
             {/* Footer */}
-            <div className="fixed z-40 bottom-0 right-0 w-screen text-slate-400 bg-slate-100 border-t border-slate-400 py-2 text-xs">
-                <div className="flex gap-4 mx-4 relative float-right">
-                    <div>
-                        {language === "FR" ? (eq ? "Tous changements sont enregistrés" : isSaved ? "Enregistré" : "En train d'enregistrer...") : (eq ? "All changes updated" : isSaved ? "Saved" : "Saving...")}
-                    </div>
-                    {lines && <div>{language === "FR" ? "Lignes" : "Lines"}: {lines}</div>}
-                    {words && <div>{language === "FR" ? "Mots" : "Words"}: {words}</div>}
-                    <div>{cursorPos}</div>
-                </div>
-            </div>
+            {<Footer sections={sectionsState} openSectionId={openSectionId} eq={eq} isSaved={isSaved} />}
         </>
     )
 }
