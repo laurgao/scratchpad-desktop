@@ -45,15 +45,14 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
             if (!isH1 && lastIsH1) {
                 // If just clicked off a h1
                 const shouldGoToNewSection = !isBlur && cursorInfo.line >= h1Line
-                const newCursorPosition = shouldGoToNewSection ? { line: cursorInfo.line - h1Line - 1, ch: cursorInfo.ch } : null
 
                 // Get name of new section
                 const h1LineContent = instance.doc.getLine(h1Line)
-                const name = h1LineContent.substr(2, h1LineContent.length)
+                const name: string = h1LineContent.substr(2, h1LineContent.length)
 
                 // Get body of new section
                 const newBodyArr = instance.doc.children[0].lines.filter((l, idx) => idx > h1Line).map(l => l.text)
-                const newBody = newBodyArr.join(`
+                const newBody: string = newBodyArr.join(`
 `)
 
                 // Delete everything under and including the h1.
@@ -64,7 +63,19 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
                 );
 
                 // Create the section
-                // TODO
+                const newId = (sectionsOrder.length + 2).toString()
+                const newSection: Section = {
+                    title: name || "",
+                    body: newBody || "",
+                    _id: newId,
+                }
+                // TOOD: put new section right after curr section.
+                setSections(prev => [...prev, newSection])
+
+                if (shouldGoToNewSection) {
+                    setSectionKwargs({ sectionId: newId, condition: "initiate-on-specified-cursor-pos", initialCursorPos: { line: cursorInfo.line - h1Line - 1, ch: cursorInfo.ch } })
+                    setOpenSectionId(newId)
+                }
 
                 // Reset
                 // @ts-ignore

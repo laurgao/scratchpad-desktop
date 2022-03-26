@@ -23,7 +23,8 @@ function App() {
     const [fileContent, setFileContent] = useState<Section[] | null>(null);
     const [content, setContent] = useState<Section[] | null>(null);
     const [filename, setFilename] = useState<string | null>(null);
-    const [isFileOpen, setIsFileOpen] = useState<boolean>(false);
+
+    const topBarThingyHeight = 40;
 
     function handleSave() {
         if (!filename) return handleSaveAs();
@@ -112,11 +113,12 @@ function App() {
 
     return (
         <>
-            <div className="w-full flex items-center h-10 draggable text-sm">
+            <div className="w-full flex items-center h-10 draggable text-sm fixed bg-gray-50 z-50">
                 <span className="ml-4">
-                    {`${content ? (filename || "New list*") : "dotTodo"}${(!!filename && !!content && !!fileContent && !(content === fileContent) ? "*" : "")}`}
+                    {/* TOOD: saved status in the title. */}
+                    {`${content ? (filename || "New list*") : "Scratchpad"}${(!!filename && !!content && !!fileContent && !(content === fileContent) ? "*" : "")}`}
                 </span>
-                {content && (
+                {/* {content && (
                     <div className="flex items-center ml-3 undraggable h-full">
                         <div
                             className="h-full flex items-center px-3 text-gray-400 hover:bg-gray-100 relative"
@@ -137,21 +139,21 @@ function App() {
                             )}
                         </div>
                     </div>
-                )}
+                )} */}
                 <div className="ml-auto flex items-center undraggable h-full">
                     <AppBarButton onClick={window.Main.Minimize}>&#8211;</AppBarButton>
                     <AppBarButton onClick={window.Main.Close}>&#10005;</AppBarButton>
                 </div>
             </div>
             {content ? (
-                <div className="px-4">
+                <div className="px-4" style={{ paddingTop: topBarThingyHeight }}>
                     {content && filename && <FileWithSections
                         filename={filename}
                         sections={content}
                     />}
                 </div>
             ) : (
-                <div className="p-4">
+                <div className="p-4" style={{ paddingTop: topBarThingyHeight }}>
                     <p className="text-center text-gray-400">No todo list open</p>
                     <div className="flex my-4">
                         <UiButton className="mx-auto" onClick={() => {

@@ -24,7 +24,6 @@ const FileWithSections = ({ filename, sections }: {
     const [sectionsState, setSectionsState] = useState<Section[]>(sections); // Exposed to the editor components
     const [sectionsStateSaved, setSectionsStateSaved] = useState<Section[]>(sections); // Not exposed to the editor components, represents the content of the markdown files. 
 
-
     const [newSectionName, setNewSectionName] = useState<string>("");
     const [isCreateNewSection, setIsCreateNewSection] = useState<boolean>(false);
 
