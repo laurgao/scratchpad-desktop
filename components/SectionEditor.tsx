@@ -115,6 +115,42 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
         }
     }, [isOpen])
 
+
+
+    // Stupid memoized function declaration #3: Set is editing section name
+    const initiateEditingTitleValueRef = useRef<() => (void)>();
+    const initiateEditingTitleValueMemoized = useCallback(() => {
+        setEditingTitleValue("# " + (section.title || ""))
+        waitForEl(`${section._id}-edit-section-title`)
+    }, [section.title, section._id])
+    useEffect(() => {
+        initiateEditingTitleValueRef.current = initiateEditingTitleValueMemoized
+    }, [initiateEditingTitleValueMemoized])
+
+
+    const events = useMemo(() => ({
+        cursorActivity: (instance) => {
+            // @ts-ignore
+            createSectionFromH1Ref.current(instance)
+        },
+        keydown: (instance, event) => {
+            // Every keydown that changes cursor (letter key or space, backspace, enter, etc.) is also a cursorActivity. (but not shift, alt, ctrl)
+            const cursorInfo = instance.getCursor();
+
+            const willEditTitle = cursorInfo.line === 0 &&
+                (event.key === "ArrowUp" || cursorInfo.ch === 0 && event.key === "Backspace")
+            // @ts-ignore
+            if (willEditTitle) initiateEditingTitleValueRef.current()
+
+            // else if (event.key === "ArrowDown" && cursorInfo.line === instance.doc.lineCount() - 1) {
+            //     goToSectionBelowRef.current()
+            // }
+        },
+        // blur: (instance) => {
+        //     createSectionFromH1Ref.current(instance, true)
+        // }
+    }), [])
+
     // Autosave stuff
     const [body, setBody] = useState<string>(section.body);
     useEffect(() => { if (body !== section.body) setIsSaved(false); }, [body])
@@ -145,10 +181,9 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
 
 
     // For editing section name
-
     const saveSectionName = () => {
         if (editingTitleValue && editingTitleValue.substring(0, 2) === "# ") {
-            // TODO: save section
+            saveSection(section._id, editingTitleValue.substring(2), body, setIsSaved)
         } else {
             deleteSection()
         }
@@ -215,16 +250,17 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
                             else if (e.key === "ArrowDown" || e.key === "Enter") {
                                 e.preventDefault()
                                 saveSectionName()
+                                setEditingTitleValue(null);
                                 // @ts-ignore
-                                // editorRef.current.simpleMde.codemirror.focus()
+                                codemirror.focus()
                             } else if (e.key === "ArrowUp") {
                                 const thisSectionIdx = sectionsOrder.findIndex(id => id.toString() === section._id)
                                 if (thisSectionIdx !== 0) {
                                     // Save name and open the section above this section
-                                    saveSectionName();
-                                    const prevSectionId = sectionsOrder[thisSectionIdx - 1]
-                                    setSectionKwargs({ sectionId: prevSectionId, condition: "initiate-with-cursor-on-bottom" })
-                                    setOpenSectionId(prevSectionId)
+                                    // saveSectionName();
+                                    // const prevSectionId = sectionsOrder[thisSectionIdx - 1]
+                                    // setSectionKwargs({ sectionId: prevSectionId, condition: "initiate-with-cursor-on-bottom" })
+                                    // setOpenSectionId(prevSectionId)
                                     // TODO: save section.
                                 }
 
@@ -262,7 +298,7 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
                     options={mdeOptions}
                     className="text-lg"
                     getCodemirrorInstance={getCmInstanceCallback}
-
+                    events={events}
                 />
             </Accordion>
             <hr />
