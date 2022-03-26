@@ -2,10 +2,15 @@ import Mousetrap from "mousetrap";
 import "mousetrap-global-bind";
 import React, { ButtonHTMLAttributes, DetailedHTMLProps, useEffect, useState } from "react";
 import FileWithSections from "../components/FileWithSections";
+import Container from "../components/headless/Container";
 import { Section } from "../utils/types";
 
 const AppBarButton = (props: DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>) => (
     <button {...props} className={`${props.className || ""} hover:bg-gray-100 h-full w-10`} />
+);
+
+const UiButton2 = (props: DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>) => (
+    <button {...props} className={`${props.className || ""} bg-blue-400 hover:bg-blue-700 text-white transition font-semibold py-1 px-2 text-sm border rounded`} />
 );
 
 const UiButton = (props: DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>) => (
@@ -23,8 +28,11 @@ function App() {
     const [fileContent, setFileContent] = useState<Section[] | null>(null);
     const [content, setContent] = useState<Section[] | null>(null);
     const [filename, setFilename] = useState<string | null>(null);
+    const fileIsOpen = !!content;
 
-    const topBarThingyHeight = 40;
+    const topBarHeight = 40;
+    const footerHeight = 44;
+    const mainContainerHeight = (fileIsOpen) ? `calc(100vh - ${footerHeight}px)` : "100vh"
 
     function handleSave() {
         if (!filename) return handleSaveAs();
@@ -145,24 +153,26 @@ function App() {
                     <AppBarButton onClick={window.Main.Close}>&#10005;</AppBarButton>
                 </div>
             </div>
-            {content ? (
-                <div className="px-4" style={{ paddingTop: topBarThingyHeight }}>
-                    {content && filename && <FileWithSections
-                        filename={filename}
-                        sections={content}
-                    />}
-                </div>
-            ) : (
-                <div className="p-4" style={{ paddingTop: topBarThingyHeight }}>
-                    <p className="text-center text-gray-400">No todo list open</p>
-                    <div className="flex my-4">
-                        <UiButton className="mx-auto" onClick={() => {
-                            window.Main.Open();
-                            setIsAwaitingOpen(true);
-                        }}>Open</UiButton>
+            <Container className="flex overflow-y-hidden" width="full" padding={0} style={{ height: mainContainerHeight, paddingTop: topBarHeight }}>
+                {fileIsOpen ? (
+                    <div className="px-4 overflow-y-auto">
+                        {filename && <FileWithSections
+                            filename={filename}
+                            sections={content}
+                        />}
                     </div>
-                </div>
-            )}
+                ) : (
+                    <div className="p-4">
+                        <p className="text-center text-gray-400">No todo list open</p>
+                        <div className="flex my-4">
+                            <UiButton className="mx-auto" onClick={() => {
+                                window.Main.Open();
+                                setIsAwaitingOpen(true);
+                            }}>Open</UiButton>
+                        </div>
+                    </div>
+                )}
+            </Container>
         </>
     );
 }

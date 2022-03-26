@@ -8,7 +8,7 @@ import SimpleMDEEditor from "react-simplemde-editor";
 import { waitForEl } from "../utils/key";
 import { Section } from "../utils/types";
 import { SectionKwargsObj } from "./FileWithSections";
-import Input from "./Input";
+import Input from "./headless/Input";
 
 const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, sectionKwargs, setSectionKwargs, setSections }: {
     section: Section,
@@ -182,9 +182,7 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
 
 
     // For editing section body
-    const [body, setBody] = useState<string>(section.body);
-    const onChange = useCallback((value: string) => {
-        setBody(value);
+    const handleChange = useCallback((value: string) => {
         setSections(prevSections => prevSections.map(s => s._id === section._id ? { ...s, body: value } : s))
     }, []);
 
@@ -219,7 +217,7 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
 
 
 `
-        addBody += body
+        addBody += section.body
 
         // append this body to prev body. delete this section. 
         // TODO: update file.lastOpenSection
@@ -299,7 +297,7 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
             >
                 <SimpleMDEEditor
                     // @ts-ignore
-                    onChange={value => onChange(value)}
+                    onChange={value => handleChange(value)}
                     value={section.body}
                     options={mdeOptions}
                     getCodemirrorInstance={getCmInstanceCallback}

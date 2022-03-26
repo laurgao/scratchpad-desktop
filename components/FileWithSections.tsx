@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { FaPlus } from "react-icons/fa";
 import { waitForEl } from "../utils/key";
 import { Section } from "../utils/types";
-import Button from "./Button";
-import H2 from "./H2";
-import Input from "./Input";
+import Button from "./headless/Button";
+import Input from "./headless/Input";
 import SectionEditor from "./SectionEditor";
+import H2 from "./style/H2";
 
 const AUTOSAVE_INTERVAL = 1000;
 
@@ -128,7 +128,6 @@ const FileWithSections = ({ filename, sections }: {
                             key={s._id}
                             section={s}
                             isOpen={thisSectionIsOpen}
-                            // createSection={createSection}
                             setOpenSectionId={setOpenSectionId}
                             sectionsOrder={sectionsState.map(s => s._id)}
                             sectionKwargs={sectionKwargs}
