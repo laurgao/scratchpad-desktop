@@ -1,15 +1,17 @@
 import Mousetrap from "mousetrap";
 import "mousetrap-global-bind";
 import { ButtonHTMLAttributes, DetailedHTMLProps, useContext, useEffect, useState } from "react";
-import { FaCog } from "react-icons/fa";
+import { FaAngleDown, FaAngleRight, FaCog } from "react-icons/fa";
+import Accordion from "react-robust-accordion";
 import FileWithSections from "../components/FileWithSections";
+import { footerHeight } from "../components/Footer";
 import Button from "../components/headless/Button";
 import Container from "../components/headless/Container";
 import SettingsModal, { LanguageContext } from "../components/SettingsModal";
-import { Section } from "../utils/types";
+import { Folder, Section } from "../utils/types";
 
 const AppBarButton = (props: DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>) => (
-    <button {...props} className={`${props.className || ""} hover:bg-gray-100 h-full w-10`} />
+    <button {...props} className={`${props.className || ""} hover:bg-stone-300 h-full w-10`} />
 );
 
 export const UiButton = (props: DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>) => (
@@ -33,11 +35,12 @@ function App() {
     const [filename, setFilename] = useState<string | null>(null);
     const fileIsOpen = !!content;
     const [settingsIsOpen, setSettingsIsOpen] = useState<boolean>(false);
+    const [vaultPath, setVaultPath] = useState<string | null>(null);
+    const [folders, setFolders] = useState<Folder[]>([]);
 
     const { language, setLanguage } = useContext(LanguageContext);
 
     const topBarHeight = 40;
-    const footerHeight = 33;
     const mainContainerHeight = (fileIsOpen) ? `calc(100vh - ${footerHeight}px)` : "100vh"
 
     function handleSave() {
@@ -57,7 +60,7 @@ function App() {
 
     function handleOpen() {
         setIsAwaitingOpen(true);
-        window.Main.Open();
+        window.Main.OpenDir();
     }
 
     function handleNew() {
@@ -69,12 +72,18 @@ function App() {
 
     useEffect(() => {
         if (isAwaitingOpen && window.Main)
-            window.Main.on("open", ({ filename, sections }: { filename: string, sections: Section[] }) => {
-                setFilename(filename);
-                setFileContent(sections);
-                setContent(sections);
+            // window.Main.on("open", ({ filename, sections }: { filename: string, sections: Section[] }) => {
+            //     setFilename(filename);
+            //     setFileContent(sections);
+            //     setContent(sections);
+            //     setIsAwaitingOpen(false);
+            // });
+            window.Main.on("openDir", (returned: { filePath: string, folders: Folder[] }) => {
+                console.log("returned!", returned)
+                setVaultPath(returned.filePath)
+                setFolders(returned.folders);
                 setIsAwaitingOpen(false);
-            });
+            })
     }, [isAwaitingOpen]);
 
     useEffect(() => {
@@ -127,7 +136,7 @@ function App() {
 
     return (
         <>
-            <div className="w-full flex items-center h-10 draggable text-sm fixed bg-gray-200 z-50">
+            <div className="w-full flex items-center h-10 draggable text-sm fixed bg-stone-200 z-50">
                 <span className="ml-4">
                     {/* TOOD: saved status in the title. */}
                     {`${content ? (filename || "New list*") : "Scratchpad"}${(!!filename && !!content && !!fileContent && !(content === fileContent) ? "*" : "")}`}
@@ -162,19 +171,40 @@ function App() {
             <Container className="flex overflow-y-hidden" width="full" padding={0} style={{ height: mainContainerHeight, paddingTop: topBarHeight }}>
                 {fileIsOpen ? (
                     <div className="px-4 overflow-y-auto flex-grow pt-4">
-                        {filename && <FileWithSections
-                            filename={filename}
-                            sections={content}
-                        />}
+                        {filename && <FileWithSections filename={filename} sections={content} />}
+                    </div>
+                ) : vaultPath ? (
+                    <div className="px-4 overflow-y-auto flex-grow pt-4">
+                        {folders && folders.map(folder => (
+                            <div key={folder.name} className="-mt-0.5">
+                                <Accordion
+                                    className="text-base text-gray-500 mb-1"
+                                    label={
+                                        <div
+                                            className={`flex items-center rounded-md px-2 py-1`}
+                                        >
+                                            {false ? <FaAngleDown /> : <FaAngleRight />}
+                                            <p className="ml-2">{folder.name}</p>
+                                        </div>
+                                    }
+                                >
+                                    <div className="text-base text-gray-500 mb-2 ml-5 mt-1 overflow-x-visible">
+                                        {folder.fileNames.map((file, idx) =>
+                                            <div key={file}>
+                                                <p
+                                                    className={`cursor-pointer rounded-md px-2 py-1 ${false && "bg-blue-400 text-white"}`}
+                                                >{file}</p>
+                                            </div>
+                                        )}</div>
+                                </Accordion>
+                            </div>
+                        ))}
                     </div>
                 ) : (
                     <div className="p-4 flex-grow">
                         <p className="text-center text-gray-400">{language === "EN" ? "No file open." : "Aucun fichier ouvert."}</p>
                         <div className="flex my-4">
-                            <UiButton className="mx-auto" onClick={() => {
-                                window.Main.Open();
-                                setIsAwaitingOpen(true);
-                            }}>{language === "FR" ? "Ouvrez" : "Open"}</UiButton>
+                            <UiButton className="mx-auto" onClick={handleOpen}>{language === "FR" ? "Ouvrez" : "Open"}</UiButton>
                         </div>
                     </div>
                 )}

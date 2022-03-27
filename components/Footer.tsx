@@ -2,6 +2,9 @@ import { useContext, useEffect, useState } from 'react';
 import { Section } from "../utils/types";
 import { LanguageContext } from "./SettingsModal";
 
+
+export const footerHeight = 33;
+
 const Footer = ({ sections, openSectionId, eq, isSaved }: { sections: Section[], openSectionId: string | null, eq: boolean, isSaved: boolean }) => {
     const { language, setLanguage } = useContext(LanguageContext);
 

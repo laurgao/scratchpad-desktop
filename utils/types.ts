@@ -1,6 +1,6 @@
-export interface Item {
-    task: string,
-    completed: boolean,
+export interface Folder {
+    name: string,
+    fileNames: string[]
 }
 
 export interface Section {

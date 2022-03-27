@@ -4,7 +4,7 @@ import * as fs from "fs";
 import path, { join } from "path"; // Native
 import getFileString from "../utils/getFileString";
 // import getTodoStringIndices from "../utils/getTodoStringIndices";
-import { Section } from "../utils/types";
+import { Folder, Section } from "../utils/types";
 
 
 const height = 600, width = 800, minWidth = 100, minHeight = 100;
@@ -78,6 +78,46 @@ app.on("window-all-closed", () => {
 });
 
 const filters = [{ name: "Markdown files", extensions: ["md"] }];
+
+ipcMain.on("openDir", (event: IpcMainEvent) => {
+    dialog.showOpenDialog(window, {
+        properties: ["openDirectory"],
+    }).then(({ filePaths }) => {
+        if (filePaths && filePaths[0]) {
+            // let fileContents: { title: string, sections: Section[] }[] = [];
+            const dirPath = filePaths[0];
+            fs.readdir(dirPath, (err, subFolders) => {
+                if (err) {
+                    console.log("error");
+                }
+                let folders: Folder[] = []
+                console.log(dirPath)
+                // files.forEach((f) => {
+                //     // var folder: Folder = { name: f, files: [] };
+                //     console.log(filePath + "\\" + f)
+                //     fs.readdir((filePath + "\\" + f), (error, fichiers) => {
+                //         if (error) console.log("error")
+                //         // returned = returned.map(folder => folder.name === f ? { ...folder, files: fichiers } : folder)
+                //         // folder.files = fichiers;
+                //         console.log(fichiers)
+                //         // console.log(f, returned, fichiers)
+                //         returned.push({ name: f, files: fichiers })
+                //     })
+                //     // console.log(folder);
+                //     // returned.push(folder)
+                // })
+                for (const subFolder of subFolders) {
+                    fs.readdir((dirPath + "\\" + subFolder), (error, fichiers) => {
+                        if (error) console.log("error")
+                        folders.push({ name: subFolder, fileNames: fichiers })
+                        console.log(folders)
+                    })
+                }
+                event.sender.send("openDir", { filePath: dirPath, folders });
+            });
+        }
+    })
+});
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.

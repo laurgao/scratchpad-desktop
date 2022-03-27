@@ -30,9 +30,9 @@ const SectionEditor = ({ section, isOpen, sectionsOrder, setOpenSectionId, secti
     }, []);
 
     // H1 new section stuff
-    const [lastIsH1, setLastIsH1] = useState<boolean>(false)
+    const [lastIsH1, setLastIsH1] = useState<boolean>(false);
     // @ts-ignore
-    const [h1Line, setH1Line] = useState<number>(null)
+    const [h1Line, setH1Line] = useState<number>(null);
 
     // Stupid memoized fn declaration in 3 parts
     // Need to put these before the useEffect that runs on open

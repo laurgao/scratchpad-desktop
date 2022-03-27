@@ -31,6 +31,9 @@ const api = {
     Open: () => {
         ipcRenderer.send("open");
     },
+    OpenDir: () => {
+        ipcRenderer.send("openDir");
+    },
     Save: (content: Section[]) => {
         ipcRenderer.send("save", content);
     },
