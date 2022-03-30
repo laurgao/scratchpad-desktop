@@ -93,7 +93,6 @@ const FoldersSidebar = ({ mainContainerHeight, folders, handleOpenFile, openFile
                 defaultWidth={200}
                 style={{ height: mainContainerHeight }}
                 draggedBorderHeight={mainContainerHeight}
-                minWidth={100}
                 className="overflow-auto px-4 bg-gray-100 pb-4"
             >
                 <div className="text-xs text-gray-400 my-4">
