@@ -28,8 +28,8 @@ const api = {
     Close: () => {
         ipcRenderer.send("close");
     },
-    Open: () => {
-        ipcRenderer.send("open");
+    Open: (filePath: string) => {
+        ipcRenderer.send("open", filePath);
     },
     OpenDir: () => {
         ipcRenderer.send("openDir");

@@ -28,6 +28,7 @@ const MenuButton = (props: DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElem
 
 function App() {
     const [isAwaitingOpen, setIsAwaitingOpen] = useState<boolean>(false);
+    const [isAwaitingOpenFile, setIsAwaitingOpenFile] = useState<boolean>(false);
     const [isAwaitingSave, setIsAwaitingSave] = useState<boolean>(false);
     const [isAwaitingSaveAs, setIsAwaitingSaveAs] = useState<boolean>(false);
     const [fileContent, setFileContent] = useState<Section[] | null>(null);
@@ -37,6 +38,7 @@ function App() {
     const [settingsIsOpen, setSettingsIsOpen] = useState<boolean>(false);
     const [vaultPath, setVaultPath] = useState<string | null>(null);
     const [folders, setFolders] = useState<Folder[]>([]);
+    const [openFolderName, setOpenFolderName] = useState<string | null>(null);
 
     const { language, setLanguage } = useContext(LanguageContext);
 
@@ -63,6 +65,11 @@ function App() {
         window.Main.OpenDir();
     }
 
+    function handleOpenFile(folderName, fileName) {
+        setIsAwaitingOpenFile(true);
+        window.Main.Open(vaultPath + "\\" + folderName + "\\" + fileName);
+    }
+
     function handleNew() {
         setFileContent(null);
         setContent(null);
@@ -86,6 +93,16 @@ function App() {
                 setIsAwaitingOpen(false);
             })
     }, [isAwaitingOpen]);
+
+    useEffect(() => {
+        if (isAwaitingOpenFile && window.Main)
+            window.Main.on("open", ({ filename, sections }: { filename: string, sections: Section[] }) => {
+                setFilename(filename);
+                setFileContent(sections);
+                setContent(sections);
+                setIsAwaitingOpenFile(false);
+            });
+    }, [isAwaitingOpenFile]);
 
     useEffect(() => {
         if (isAwaitingSave && window.Main)
@@ -184,17 +201,23 @@ function App() {
                                         <div
                                             className={`flex items-center rounded-md px-2 py-1`}
                                         >
-                                            {false ? <FaAngleDown /> : <FaAngleRight />}
+                                            {openFolderName === folder.name ? <FaAngleDown /> : <FaAngleRight />}
                                             <p className="ml-2">{folder.name}</p>
                                         </div>
                                     }
+                                    openState={openFolderName === folder.name}
+                                    setOpenState={(event) => {
+                                        // Handle only allowing 1 folder open at a time
+                                        if (openFolderName === folder.name) setOpenFolderName(null);
+                                        else setOpenFolderName(folder.name);
+                                    }}
                                 >
                                     <div className="text-base text-gray-500 mb-2 ml-5 mt-1 overflow-x-visible">
-                                        {folder.fileNames.map((file, idx) =>
-                                            <div key={file}>
+                                        {folder.fileNames.map((fileName, idx) =>
+                                            <div key={fileName} onClick={() => handleOpenFile(folder.name, fileName)}>
                                                 <p
                                                     className={`cursor-pointer rounded-md px-2 py-1 ${false && "bg-blue-400 text-white"}`}
-                                                >{file}</p>
+                                                >{fileName}</p>
                                             </div>
                                         )}</div>
                                 </Accordion>

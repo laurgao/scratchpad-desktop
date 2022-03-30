@@ -119,53 +119,45 @@ ipcMain.on("openDir", (event: IpcMainEvent) => {
                     const fichiers = fs.readdirSync(dirPath + "\\" + subFolder);
                     folders.push({ name: subFolder, fileNames: fichiers })
                 }
-                console.log("outside for loop", folders)
                 event.sender.send("openDir", { path: dirPath, folders });
             });
             // so the stuff here will not be run after the fs.readdir is run but potentially before the directory is read.
+            // since it's not a promise, awaiting it won't help.
         }
     })
 });
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
-ipcMain.on("open", (event: IpcMainEvent) => {
-    dialog.showOpenDialog(window, {
-        filters: filters,
-        // multiSelections: false,
-    }).then(({ filePaths }) => {
-        if (filePaths && filePaths[0]) {
-            const filePath = filePaths[0];
-            currentFilePath = filePath;
-            const filename = path.basename(filePath);
-            fs.readFile(filePath, "utf-8", (err, content) => {
-                if (err) {
-                    console.log("error");
-                } else {
-                    const lines = content.split(/\r\n|\n\r|\n|\r/);
-                    let id = 1;
+ipcMain.on("open", (event: IpcMainEvent, filePath: string) => {
+    currentFilePath = filePath;
+    const filename = path.basename(filePath);
+    fs.readFile(filePath, "utf-8", (err, content) => {
+        if (err) {
+            console.log("error");
+        } else {
+            const lines = content.split(/\r\n|\n\r|\n|\r/);
+            let id = 1;
 
-                    let sections = [];
-                    let currSectionBody = null;
-                    let currSectionTitle = null;
-                    for (let line of lines) {
-                        // starts with # followed by space
-                        let match = line.match(/^#+ /);
-                        if (match && match.index === 0 && match[0] == "# ") {
-                            if (!(currSectionBody === null || currSectionTitle === null)) sections.push({ title: currSectionTitle, body: currSectionBody, _id: id.toString() });
-                            id++;
-                            currSectionBody = "";
-                            currSectionTitle = line.slice(2); // Get rid of `# `
-                        } else {
-                            currSectionBody += (line + "\n");
-                        }
-                    }
-                    sections.push({ title: currSectionTitle, body: currSectionBody, _id: id.toString() });
-                    console.log(content);
-                    console.log(sections);
-                    event.sender.send("open", { filename, sections });
+            let sections = [];
+            let currSectionBody = null;
+            let currSectionTitle = null;
+            for (let line of lines) {
+                // starts with # followed by space
+                let match = line.match(/^#+ /);
+                if (match && match.index === 0 && match[0] == "# ") {
+                    if (!(currSectionBody === null || currSectionTitle === null)) sections.push({ title: currSectionTitle, body: currSectionBody, _id: id.toString() });
+                    id++;
+                    currSectionBody = "";
+                    currSectionTitle = line.slice(2); // Get rid of `# `
+                } else {
+                    currSectionBody += (line + "\n");
                 }
-            })
+            }
+            sections.push({ title: currSectionTitle, body: currSectionBody, _id: id.toString() });
+            console.log(content);
+            console.log(sections);
+            event.sender.send("open", { filename, sections });
         }
     });
 });
