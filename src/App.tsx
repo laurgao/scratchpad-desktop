@@ -1,9 +1,9 @@
 import Mousetrap from "mousetrap";
 import "mousetrap-global-bind";
 import { ButtonHTMLAttributes, DetailedHTMLProps, useContext, useEffect, useState } from "react";
-import { FaAngleDown, FaAngleRight, FaCog } from "react-icons/fa";
-import Accordion from "react-robust-accordion";
+import { FaCog } from "react-icons/fa";
 import FileWithSections from "../components/FileWithSections";
+import FoldersSidebar from "../components/FoldersSidebar";
 import { footerHeight } from "../components/Footer";
 import Button from "../components/headless/Button";
 import Container from "../components/headless/Container";
@@ -38,7 +38,6 @@ function App() {
     const [settingsIsOpen, setSettingsIsOpen] = useState<boolean>(false);
     const [vaultPath, setVaultPath] = useState<string | null>(null);
     const [folders, setFolders] = useState<Folder[]>([]);
-    const [openFolderName, setOpenFolderName] = useState<string | null>(null);
 
     const { language, setLanguage } = useContext(LanguageContext);
 
@@ -79,12 +78,6 @@ function App() {
 
     useEffect(() => {
         if (isAwaitingOpen && window.Main)
-            // window.Main.on("open", ({ filename, sections }: { filename: string, sections: Section[] }) => {
-            //     setFilename(filename);
-            //     setFileContent(sections);
-            //     setContent(sections);
-            //     setIsAwaitingOpen(false);
-            // });
             window.Main.on("openDir", (returned: { path: string, folders: Folder[] }) => {
                 console.log("returned!", returned)
                 console.log(JSON.parse(JSON.stringify(returned.folders)))
@@ -187,43 +180,19 @@ function App() {
                 </div>
             </div>
             <Container className="flex overflow-y-hidden" width="full" padding={0} style={{ height: mainContainerHeight, paddingTop: topBarHeight }}>
-                {fileIsOpen ? (
-                    <div className="px-4 overflow-y-auto flex-grow pt-4">
-                        {filename && <FileWithSections filename={filename} sections={content} />}
-                    </div>
-                ) : vaultPath ? (
-                    <div className="px-4 overflow-y-auto flex-grow pt-4">
-                        {folders && folders.map(folder => (
-                            <div key={folder.name} className="-mt-0.5">
-                                <Accordion
-                                    className="text-base text-gray-500 mb-1"
-                                    label={
-                                        <div
-                                            className={`flex items-center rounded-md px-2 py-1`}
-                                        >
-                                            {openFolderName === folder.name ? <FaAngleDown /> : <FaAngleRight />}
-                                            <p className="ml-2">{folder.name}</p>
-                                        </div>
-                                    }
-                                    openState={openFolderName === folder.name}
-                                    setOpenState={(event) => {
-                                        // Handle only allowing 1 folder open at a time
-                                        if (openFolderName === folder.name) setOpenFolderName(null);
-                                        else setOpenFolderName(folder.name);
-                                    }}
-                                >
-                                    <div className="text-base text-gray-500 mb-2 ml-5 mt-1 overflow-x-visible">
-                                        {folder.fileNames.map((fileName, idx) =>
-                                            <div key={fileName} onClick={() => handleOpenFile(folder.name, fileName)}>
-                                                <p
-                                                    className={`cursor-pointer rounded-md px-2 py-1 ${false && "bg-blue-400 text-white"}`}
-                                                >{fileName}</p>
-                                            </div>
-                                        )}</div>
-                                </Accordion>
+                {vaultPath ? (
+                    <>
+                        <FoldersSidebar mainContainerHeight={mainContainerHeight} folders={folders} handleOpenFile={handleOpenFile} openFileName={filename} />
+                        {fileIsOpen ? (
+                            <div className="px-4 overflow-y-auto flex-grow pt-4">
+                                {filename && <FileWithSections filename={filename} sections={content} />}
                             </div>
-                        ))}
-                    </div>
+                        ) : (
+                            <div className="flex items-center justify-center text-center h-1/2 flex-grow">
+                                <p>No file is open.<br />Ctrl + n or Cmd + n to create a new {false ? "folder to store your files" : "file"}.</p>
+                            </div>
+                        )}
+                    </>
                 ) : (
                     <div className="p-4 flex-grow">
                         <p className="text-center text-gray-400">{language === "EN" ? "No file open." : "Aucun fichier ouvert."}</p>
