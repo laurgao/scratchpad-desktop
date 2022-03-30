@@ -78,9 +78,10 @@ function App() {
             //     setContent(sections);
             //     setIsAwaitingOpen(false);
             // });
-            window.Main.on("openDir", (returned: { filePath: string, folders: Folder[] }) => {
+            window.Main.on("openDir", (returned: { path: string, folders: Folder[] }) => {
                 console.log("returned!", returned)
-                setVaultPath(returned.filePath)
+                console.log(JSON.parse(JSON.stringify(returned.folders)))
+                setVaultPath(returned.path)
                 setFolders(returned.folders);
                 setIsAwaitingOpen(false);
             })
