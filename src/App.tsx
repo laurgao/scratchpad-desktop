@@ -47,9 +47,6 @@ const MenuItem = ({ name, children }: { name: string, children: ReactNode }) => 
 function App() {
     const [isAwaitingOpen, setIsAwaitingOpen] = useState<boolean>(false);
     const [isAwaitingOpenFile, setIsAwaitingOpenFile] = useState<boolean>(false);
-    const [isAwaitingSave, setIsAwaitingSave] = useState<boolean>(false);
-    const [isAwaitingSaveAs, setIsAwaitingSaveAs] = useState<boolean>(false);
-    const [fileContent, setFileContent] = useState<Section[] | null>(null);
     const [content, setContent] = useState<Section[] | null>(null);
     const [filename, setFilename] = useState<string | null>(null);
     const fileIsOpen = !!content;
@@ -64,21 +61,6 @@ function App() {
     const topBarHeight = 40;
     const mainContainerHeight = (fileIsOpen) ? `calc(100vh - ${footerHeight}px)` : "100vh"
 
-    function handleSave() {
-        if (!filename) return handleSaveAs();
-        if (content) {
-            setIsAwaitingSave(true);
-            window.Main.Save(content);
-        }
-    }
-
-    function handleSaveAs() {
-        if (content) {
-            setIsAwaitingSaveAs(true);
-            window.Main.SaveAs(content);
-        }
-    }
-
     function handleOpenDir() {
         setIsAwaitingOpen(true);
         window.Main.OpenDir();
@@ -89,18 +71,9 @@ function App() {
         window.Main.Open(vaultPath + "\\" + folderName + "\\" + fileName);
     }
 
-    function handleNew() {
-        setFileContent(null);
-        setContent(null);
-        setFilename(null);
-        window.Main.New();
-    }
-
     useEffect(() => {
         if (isAwaitingOpen && window.Main)
             window.Main.on("openDir", (returned: { path: string, folders: Folder[] }) => {
-                console.log("returned!", returned)
-                console.log(JSON.parse(JSON.stringify(returned.folders)))
                 setVaultPath(returned.path)
                 setFolders(returned.folders);
                 setIsAwaitingOpen(false);
@@ -111,57 +84,18 @@ function App() {
         if (isAwaitingOpenFile && window.Main)
             window.Main.on("open", ({ filename, sections }: { filename: string, sections: Section[] }) => {
                 setFilename(filename);
-                setFileContent(sections);
                 setContent(sections);
                 setIsAwaitingOpenFile(false);
             });
     }, [isAwaitingOpenFile]);
 
     useEffect(() => {
-        if (isAwaitingSave && window.Main)
-            window.Main.on("save", () => {
-                setFileContent(content);
-                setIsAwaitingSave(false);
-            });
-    }, [isAwaitingSave]);
-
-    useEffect(() => {
-        if (isAwaitingSaveAs && window.Main)
-            window.Main.on("saveAs", (filename: string) => {
-                setFilename(filename);
-                setContent(content);
-                setFileContent(content);
-                setIsAwaitingSave(false);
-            });
-    }, [isAwaitingSaveAs]);
-
-    useEffect(() => {
-        if (content) {
-            // @ts-ignore doesn't recognize global
-            Mousetrap.bindGlobal("mod+s", handleSave);
-            // @ts-ignore doesn't recognize global
-            Mousetrap.bindGlobal("mod+shift+s", handleSaveAs);
-        }
-
-        return () => {
-            // @ts-ignore doesn't recognize global
-            Mousetrap.unbindGlobal("mod+s");
-            // @ts-ignore doesn't recognize global
-            Mousetrap.unbindGlobal("mod+shift+s");
-        }
-    }, [content]);
-
-    useEffect(() => {
         // @ts-ignore doesn't recognize global
         Mousetrap.bindGlobal("mod+o", handleOpenDir);
-        // @ts-ignore doesn't recognize global
-        Mousetrap.bindGlobal("mod+n", handleNew);
 
         return () => {
             // @ts-ignore doesn't recognize global
             Mousetrap.unbindGlobal("mod+o");
-            // @ts-ignore doesn't recognize global
-            Mousetrap.unbindGlobal("mod+n");
         }
     })
 
@@ -225,6 +159,7 @@ function App() {
                             openFileName={filename}
                             width={folderbarWidth}
                             setWidth={setFolderbarWidth}
+                            vaultPath={vaultPath}
                         />
                         {fileIsOpen ? (
                             <div className="px-4 overflow-y-auto flex-grow pt-4">

@@ -12,7 +12,7 @@ import ResizableRight from "./ResizableRight";
 
 export const defaultWidth = 200
 
-const FoldersSidebar = ({ mainContainerHeight, folders, handleOpenFile, openFileName, width, setWidth }: { mainContainerHeight: string, folders: Folder[], handleOpenFile: (folderName: string, fileName: string) => void, openFileName: string | null, width: number, setWidth: Dispatch<SetStateAction<number>> }) => {
+const FoldersSidebar = ({ mainContainerHeight, folders, handleOpenFile, openFileName, width, setWidth, vaultPath }: { mainContainerHeight: string, folders: Folder[], handleOpenFile: (folderName: string, fileName: string) => void, openFileName: string | null, width: number, setWidth: Dispatch<SetStateAction<number>>, vaultPath: string }) => {
     const dateFileName = format(new Date(), "yyyy-MM-dd");
     const [newFileName, setNewFileName] = useState<string>(dateFileName);
     const [isNewFolder, setIsNewFolder] = useState<boolean>(false);
@@ -21,13 +21,38 @@ const FoldersSidebar = ({ mainContainerHeight, folders, handleOpenFile, openFile
     const [toDeleteItemForRightClick, setToDeleteItemForRightClick] = useState<any[] | null>(null);
     const [openFolderName, setOpenFolderName] = useState<string | null>(null);
 
-    function onCreateNewFolder() {
-        // TODO
+    function handleClickNewFolder() {
+        if (!openFolderName) setNewFileName("");
+        else setNewFileName(dateFileName);
+        setHoverCoords(null);
+        setIsNewFolder(true);
     }
 
+    useEffect(() => {
+        // @ts-ignore doesn't recognize global
+        Mousetrap.bindGlobal("mod+n", handleClickNewFolder);
+
+        return () => {
+            // @ts-ignore doesn't recognize global
+            Mousetrap.unbindGlobal("mod+n");
+        }
+    })
+    const [isAwaitingSaveNewFile, setIsAwaitingSaveNewFile] = useState<boolean>(false);
     function handleSubmitNewFolder() {
-        // TODO
+        setIsAwaitingSaveNewFile(true);
+        if (openFolderName) window.Main.SaveNewFile(vaultPath + "\\" + openFolderName + "\\" + newFileName + ".md");
+        else alert("Folder not created because that functionality has not been implemented in Scratchpad yet. Create a folder manually in your operating system's native explorer instead.") // TODO: implement creating new folders
+        setIsNewFolder(false);
     }
+
+    useEffect(() => {
+        if (isAwaitingSaveNewFile && window.Main)
+            window.Main.on("newFile", (filename: string) => {
+                if (openFolderName) handleOpenFile(openFolderName, filename);
+                else console.warn("Newly created file was not successfully opened");
+                setIsAwaitingSaveNewFile(false);
+            })
+    }, [isAwaitingSaveNewFile]);
 
     function deleteFile(x, y) {
         // TODO
@@ -105,7 +130,7 @@ const FoldersSidebar = ({ mainContainerHeight, folders, handleOpenFile, openFile
                     ) : (
                         <Button
                             childClassName="flex items-center"
-                            onClick={onCreateNewFolder}
+                            onClick={handleClickNewFolder}
                             onMouseLeave={(e) => setHoverCoords(null)}
                             onMouseMove={e => setHoverCoords([e.pageX, e.pageY])}
                             onMouseEnter={e => setHoverCoords([e.pageX, e.pageY])}
@@ -135,6 +160,22 @@ const FoldersSidebar = ({ mainContainerHeight, folders, handleOpenFile, openFile
                                 }}
                             >
                                 <div className="text-base text-gray-500 mb-2 ml-5 mt-1 overflow-x-visible">
+                                    {(folder.name === openFolderName && isNewFolder) && (
+                                        <div className="px-2 py-1">
+                                            <Input
+                                                value={newFileName}
+                                                setValue={setNewFileName}
+                                                type="text"
+                                                placeholder="File name"
+                                                className="text-base text-gray-500"
+                                                onKeyDown={e => {
+                                                    if (e.key === "Enter") handleSubmitNewFolder()
+                                                    else if (e.key === "Escape") setIsNewFolder(false)
+                                                }}
+                                                autoFocus
+                                            />
+                                        </div>
+                                    )}
                                     {folder.fileNames.map((fileName, idx) =>
                                         <div key={fileName} onClick={() => handleOpenFile(folder.name, fileName)}>
                                             <p
@@ -152,12 +193,12 @@ const FoldersSidebar = ({ mainContainerHeight, folders, handleOpenFile, openFile
                             setValue={setNewFileName}
                             type="text"
                             placeholder="Folder name"
-                            id="new-file"
                             className="text-base text-gray-500"
                             onKeyDown={e => {
                                 if (e.key === "Enter") handleSubmitNewFolder();
                                 else if (e.key === "Escape") setIsNewFolder(false);
                             }}
+                            autoFocus
                         />
                         {!!newFileName && <p className="text-xs text-gray-400">Enter to save<br />Esc to exit</p>}
                     </>

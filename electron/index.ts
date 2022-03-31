@@ -77,25 +77,6 @@ app.on("window-all-closed", () => {
     if (process.platform !== "darwin") app.quit();
 });
 
-const filters = [{ name: "Markdown files", extensions: ["md"] }];
-
-// const x = (subFolder: string, dirPath: string): Folder => {
-
-//     fs.readdir((dirPath + "\\" + subFolder), (error, fichiers) => {
-//         if (error) console.log("error")
-//         console.log("here");
-//         return { name: subFolder, fileNames: fichiers }
-//         // folders.push({ name: subFolder, fileNames: fichiers })
-//         // console.log(folders)
-//     })
-
-//     return { name: subFolder, fileNames: ["yummy"] }
-// }
-
-// async function y(subFolders: string[], dirPath: string) {
-//     return await Promise.all(subFolders.map(async subFolder => x(subFolder, dirPath)));
-// }
-
 ipcMain.on("openDir", (event: IpcMainEvent) => {
     dialog.showOpenDialog(window, {
         properties: ["openDirectory"],
@@ -105,17 +86,10 @@ ipcMain.on("openDir", (event: IpcMainEvent) => {
             // ohhhhh fs.readdir is an async function
             // the 2nd argument is a callback function that is run after the directory is read
             fs.readdir(dirPath, (err, subFolders) => {
-                if (err) console.log("error");
-                // let folders: Folder[] = subFolders.map(subFolder => x(subFolder, dirPath));
+                if (err) console.log("error with opening the directory " + dirPath);
                 let folders: Folder[] = [];
 
-                // let folders = y(subFolders, dirPath);
                 for (const subFolder of subFolders) {
-                    // fs.readdir((dirPath + "\\" + subFolder), (error, fichiers) => {
-                    //     if (error) console.log("error")
-                    //     folders.push({ name: subFolder, fileNames: fichiers })
-                    //     console.log(folders)
-                    // })
                     const fichiers = fs.readdirSync(dirPath + "\\" + subFolder);
                     folders.push({ name: subFolder, fileNames: fichiers })
                 }
@@ -134,7 +108,7 @@ ipcMain.on("open", (event: IpcMainEvent, filePath: string) => {
     const filename = path.basename(filePath);
     fs.readFile(filePath, "utf-8", (err, content) => {
         if (err) {
-            console.log("error");
+            console.log("error with opening the file path " + filePath);
         } else {
             const lines = content.split(/\r\n|\n\r|\n|\r/);
             let id = 1;
@@ -155,8 +129,6 @@ ipcMain.on("open", (event: IpcMainEvent, filePath: string) => {
                 }
             }
             sections.push({ title: currSectionTitle, body: currSectionBody, _id: id.toString() });
-            console.log(content);
-            console.log(sections);
             event.sender.send("open", { filename, sections });
         }
     });
@@ -167,16 +139,13 @@ ipcMain.on("save", (event: IpcMainEvent, items: Section[]) => {
     event.sender.send("save");
 });
 
-ipcMain.on("saveAs", (event: IpcMainEvent, items: Section[]) => {
-    dialog.showSaveDialog(window, {
-        filters: filters,
-    }).then(({ filePath }) => {
-        if (!filePath) return;
-        currentFilePath = filePath;
-        fs.writeFileSync(filePath, getFileString(items));
-        const filename = path.basename(filePath);
-        event.sender.send("saveAs", filename);
-    });
+ipcMain.on("newFile", (event: IpcMainEvent, filePath: string) => {
+    if (!filePath) return;
+    currentFilePath = filePath;
+    const startingFileContent = `# `
+    fs.writeFileSync(filePath, startingFileContent);
+    const filename = path.basename(filePath);
+    event.sender.send("newFile", filename);
 })
 
 ipcMain.on("new", () => {

@@ -37,8 +37,8 @@ const api = {
     Save: (content: Section[]) => {
         ipcRenderer.send("save", content);
     },
-    SaveAs: (content: Section[]) => {
-        ipcRenderer.send("saveAs", content);
+    SaveNewFile: (filePath: string) => {
+        ipcRenderer.send("newFile", filePath);
     },
     New: () => {
         ipcRenderer.send("new");

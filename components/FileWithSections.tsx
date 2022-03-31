@@ -30,7 +30,7 @@ const FileWithSections = ({ filename, sections }: {
     const [isCreateNewSection, setIsCreateNewSection] = useState<boolean>(false);
     const { language, setLanguage } = useContext(LanguageContext);
 
-    // update the sections states when the prop changes, which ahppens when we change what file is opened.
+    // update the sections states when the prop changes, which happens when we change what file is opened.
     useEffect(() => {
         setSectionsState(sections);
         setSectionsStateSaved(sections);
