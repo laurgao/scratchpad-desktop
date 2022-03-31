@@ -5,8 +5,6 @@ import Select from "./headless/Select";
 import A from "./style/A";
 import H3 from "./style/H3";
 
-export const LOCAL_STORAGE_KEY = "scratchpad.language";
-
 export type language = "EN" | "FR";
 const languageOptions: { label: string, value: language }[] = [{ label: "English", value: "EN" }, { label: "Français", value: "FR" }]
 

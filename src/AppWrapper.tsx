@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { language, LanguageContext, LOCAL_STORAGE_KEY } from "../components/SettingsModal";
+import { language, LanguageContext } from "../components/SettingsModal";
 import App from "./App";
+
+const LOCAL_STORAGE_KEY = "scratchpad.language";
 
 const AppWrapper = () => {
     const [language, setLanguage] = useState<language>(localStorage.getItem(LOCAL_STORAGE_KEY) as language || "EN");

@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
+import { Dispatch, SetStateAction, useContext, useEffect, useRef, useState } from 'react';
 import { FaAngleDown, FaAngleRight, FaPlus, FaTrash } from "react-icons/fa";
 import Accordion from "react-robust-accordion";
 import { UiButton } from "../src/App";
@@ -8,6 +8,7 @@ import Button from "./headless/Button";
 import Input from "./headless/Input";
 import Modal from "./headless/Modal";
 import ResizableRight from "./ResizableRight";
+import { LanguageContext } from "./SettingsModal";
 
 
 export const defaultWidth = 200
@@ -20,6 +21,7 @@ const FoldersSidebar = ({ mainContainerHeight, folders, handleOpenFile, openFile
     const [toDeleteItem, setToDeleteItem] = useState<any>(null);
     const [toDeleteItemForRightClick, setToDeleteItemForRightClick] = useState<any[] | null>(null);
     const [openFolderName, setOpenFolderName] = useState<string | null>(null);
+    const { language, setLanguage } = useContext(LanguageContext);
 
     function handleClickNewFolder() {
         if (!openFolderName) setNewFileName("");
@@ -99,7 +101,7 @@ const FoldersSidebar = ({ mainContainerHeight, folders, handleOpenFile, openFile
                 <div
                     className="bg-white border border-gray-400 p-1 z-30 absolute text-xs text-gray-400"
                     style={{ left: (hoverCoords[0] + 20), top: (hoverCoords[1]) }}
-                >(win) ctrl + /<br />(mac) cmd + /</div>
+                >(win) ctrl + n<br />(mac) cmd + n</div>
             }
 
             {toDeleteItem && <Modal isOpen={!!toDeleteItem} onClose={() => setToDeleteItem(null)}> {/*  small={true}*/}
@@ -126,7 +128,11 @@ const FoldersSidebar = ({ mainContainerHeight, folders, handleOpenFile, openFile
             >
                 <div className="text-xs text-gray-400 my-4">
                     {isNewFolder ? (
-                        <p className={(newFileName && openFolderName) ? "" : "invisible"}>Enter to save<br />Esc to exit</p>
+                        <p className={(newFileName && openFolderName) ? "" : "invisible"}>{language === "EN" ? (
+                            <>Enter to save<br />Esc to exit</>
+                        ) : (
+                            <>Enter pour enregistrer<br />Esc pour fermer</>
+                        )}</p>
                     ) : (
                         <Button
                             childClassName="flex items-center"
@@ -166,7 +172,7 @@ const FoldersSidebar = ({ mainContainerHeight, folders, handleOpenFile, openFile
                                                 value={newFileName}
                                                 setValue={setNewFileName}
                                                 type="text"
-                                                placeholder="File name"
+                                                placeholder={language === "EN" ? "File name" : "Nom du fichier"}
                                                 className="text-base text-gray-500"
                                                 onKeyDown={e => {
                                                     if (e.key === "Enter") handleSubmitNewFolder()
@@ -185,14 +191,15 @@ const FoldersSidebar = ({ mainContainerHeight, folders, handleOpenFile, openFile
                                     )}</div>
                             </Accordion>
                         </div>
-                    ))}</div>
+                    ))}
+                </div>
                 {(isNewFolder && !openFolderName) && (
                     <>
                         <Input
                             value={newFileName}
                             setValue={setNewFileName}
                             type="text"
-                            placeholder="Folder name"
+                            placeholder={language === "EN" ? "Folder name" : "Nom du dossier"}
                             className="text-base text-gray-500"
                             onKeyDown={e => {
                                 if (e.key === "Enter") handleSubmitNewFolder();
@@ -200,7 +207,11 @@ const FoldersSidebar = ({ mainContainerHeight, folders, handleOpenFile, openFile
                             }}
                             autoFocus
                         />
-                        {!!newFileName && <p className="text-xs text-gray-400">Enter to save<br />Esc to exit</p>}
+                        {!!newFileName && language === "EN" ? (
+                            <p className="text-xs text-gray-400">Enter to save<br />Esc to exit</p>
+                        ) : (
+                            <p className="text-xs text-gray-400">Enter pour enregistrer<br />Esc pour fermer</p>
+                        )}
                     </>
                 )}
             </ResizableRight>
