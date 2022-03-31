@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 
 const snapWidth = 50; // feels right from my UX POV
-export default function ResizableRight(props: React.HTMLProps<HTMLDivElement> & { defaultWidth: number, draggedBorderHeight: string }) {
-    const [width, setWidth] = useState(props.defaultWidth);
+export default function ResizableRight(props: React.HTMLProps<HTMLDivElement> & { draggedBorderHeight: string, width: number, setWidth: Dispatch<SetStateAction<number>> }) {
+    const { width, setWidth } = props;
     const [isDragging, setIsDragging] = useState<boolean>(false)
 
-    let propsCopy = { ...props, defaultWidth: undefined, draggedBorderHeight: undefined };
+    let propsCopy = { ...props, draggedBorderHeight: undefined, width: undefined, setWidth: undefined };
     const displayedWidth = width > snapWidth ? width : 0
 
     propsCopy.style = { ...props.style, width: displayedWidth };
@@ -18,7 +18,7 @@ export default function ResizableRight(props: React.HTMLProps<HTMLDivElement> & 
 
     return (
         <div className="flex">
-            {(width >= snapWidth || !width) && <div {...propsCopy}>
+            {(width >= snapWidth || (!width && width !== 0)) && <div {...propsCopy}>
             </div>}
 
             <div

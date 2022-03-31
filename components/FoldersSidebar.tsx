@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { useEffect, useRef, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { FaAngleDown, FaAngleRight, FaPlus, FaTrash } from "react-icons/fa";
 import Accordion from "react-robust-accordion";
 import { UiButton } from "../src/App";
@@ -9,7 +9,10 @@ import Input from "./headless/Input";
 import Modal from "./headless/Modal";
 import ResizableRight from "./ResizableRight";
 
-const FoldersSidebar = ({ mainContainerHeight, folders, handleOpenFile, openFileName }: { mainContainerHeight: string, folders: Folder[], handleOpenFile: (folderName: string, fileName: string) => void, openFileName: string | null }) => {
+
+export const defaultWidth = 200
+
+const FoldersSidebar = ({ mainContainerHeight, folders, handleOpenFile, openFileName, width, setWidth }: { mainContainerHeight: string, folders: Folder[], handleOpenFile: (folderName: string, fileName: string) => void, openFileName: string | null, width: number, setWidth: Dispatch<SetStateAction<number>> }) => {
     const dateFileName = format(new Date(), "yyyy-MM-dd");
     const [newFileName, setNewFileName] = useState<string>(dateFileName);
     const [isNewFolder, setIsNewFolder] = useState<boolean>(false);
@@ -90,7 +93,8 @@ const FoldersSidebar = ({ mainContainerHeight, folders, handleOpenFile, openFile
             {toDeleteItemForRightClick && <RightClickMenu file={toDeleteItemForRightClick[0]} x={toDeleteItemForRightClick[1]} y={toDeleteItemForRightClick[2]} />}
 
             <ResizableRight
-                defaultWidth={200}
+                width={width}
+                setWidth={setWidth}
                 style={{ height: mainContainerHeight }}
                 draggedBorderHeight={mainContainerHeight}
                 className="overflow-auto px-4 bg-gray-100 pb-4"

@@ -1,9 +1,10 @@
+import { CheckIcon } from '@heroicons/react/solid';
 import Mousetrap from "mousetrap";
 import "mousetrap-global-bind";
-import { ButtonHTMLAttributes, DetailedHTMLProps, useContext, useEffect, useState } from "react";
+import { ButtonHTMLAttributes, DetailedHTMLProps, ReactNode, useContext, useEffect, useState } from "react";
 import { FaCog } from "react-icons/fa";
 import FileWithSections from "../components/FileWithSections";
-import FoldersSidebar from "../components/FoldersSidebar";
+import FoldersSidebar, { defaultWidth } from "../components/FoldersSidebar";
 import { footerHeight } from "../components/Footer";
 import Button from "../components/headless/Button";
 import Container from "../components/headless/Container";
@@ -26,6 +27,23 @@ const MenuButton = (props: DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElem
     <button {...props} className={`${props.className || ""} h-10 w-full flex items-center px-4 text-gray-400 hover:bg-gray-100 whitespace-nowrap`} />
 );
 
+const MenuItem = ({ name, children }: { name: string, children: ReactNode }) => {
+    const [isOpen, setIsOpen] = useState<boolean>(false);
+    return (
+        <div
+            className="h-full flex items-center px-3 text-gray-400 hover:bg-gray-100 relative"
+            tabIndex={0}
+            onMouseEnter={() => setIsOpen(true)}
+            onFocus={() => setIsOpen(true)}
+            onMouseLeave={() => setIsOpen(false)}
+            onBlur={() => setIsOpen(false)}
+        >
+            <span>{name}</span>
+            {isOpen && children}
+        </div>
+    )
+}
+
 function App() {
     const [isAwaitingOpen, setIsAwaitingOpen] = useState<boolean>(false);
     const [isAwaitingOpenFile, setIsAwaitingOpenFile] = useState<boolean>(false);
@@ -38,6 +56,7 @@ function App() {
     const [settingsIsOpen, setSettingsIsOpen] = useState<boolean>(false);
     const [vaultPath, setVaultPath] = useState<string | null>(null);
     const [folders, setFolders] = useState<Folder[]>([]);
+    const [folderbarWidth, setFolderbarWidth] = useState<number>(defaultWidth);
 
     const { language, setLanguage } = useContext(LanguageContext);
 
@@ -59,7 +78,7 @@ function App() {
         }
     }
 
-    function handleOpen() {
+    function handleOpenDir() {
         setIsAwaitingOpen(true);
         window.Main.OpenDir();
     }
@@ -133,7 +152,7 @@ function App() {
 
     useEffect(() => {
         // @ts-ignore doesn't recognize global
-        Mousetrap.bindGlobal("mod+o", handleOpen);
+        Mousetrap.bindGlobal("mod+o", handleOpenDir);
         // @ts-ignore doesn't recognize global
         Mousetrap.bindGlobal("mod+n", handleNew);
 
@@ -152,37 +171,48 @@ function App() {
                     {/* TOOD: saved status in the title. */}
                     {`${content ? (filename || "New list*") : "Scratchpad"}${(!!filename && !!content && !!fileContent && !(content === fileContent) ? "*" : "")}`}
                 </span>
-                {/* {content && (
-                    <div className="flex items-center ml-3 undraggable h-full">
-                        <div
-                            className="h-full flex items-center px-3 text-gray-400 hover:bg-gray-100 relative"
-                            tabIndex={0}
-                            onMouseEnter={() => setIsFileOpen(true)}
-                            onFocus={() => setIsFileOpen(true)}
-                            onMouseLeave={() => setIsFileOpen(false)}
-                            onBlur={() => setIsFileOpen(false)}
-                        >
-                            <span>File</span>
-                            {isFileOpen && (
-                                <div className="absolute bg-white top-10 left-0">
-                                    <MenuButton onClick={handleNew}>New (Ctrl+N)</MenuButton>
-                                    <MenuButton onClick={handleSave}>Save (Ctrl+S)</MenuButton>
-                                    <MenuButton onClick={handleSaveAs}>Save as (Ctrl+Shift+S)</MenuButton>
-                                    <MenuButton onClick={handleOpen}>Open (Ctrl+O)</MenuButton>
-                                </div>
-                            )}
+                <div className="flex items-center ml-3 undraggable h-full">
+                    <MenuItem name="File">
+                        <div className="absolute bg-white top-10 left-0">
+                            {/* <MenuButton onClick={handleNew}>New (Ctrl+N)</MenuButton> */}
+                            {/* <MenuButton onClick={handleSave}>Save (Ctrl+S)</MenuButton> */}
+                            {/* <MenuButton onClick={handleSaveAs}>Save as (Ctrl+Shift+S)</MenuButton> */}
+                            <MenuButton onClick={handleOpenDir}>Open vault (Ctrl+O)</MenuButton>
                         </div>
-                    </div>
-                )} */}
+                    </MenuItem>
+                </div>
+                <div className="flex items-center ml-3 undraggable h-full">
+                    {vaultPath && <MenuItem name="View">
+                        <div className="absolute bg-white top-10 left-0">
+                            <MenuButton onClick={() => {
+                                // Toggle open/close
+                                if (folderbarWidth < 50) {
+                                    setFolderbarWidth(defaultWidth);
+                                } else {
+                                    setFolderbarWidth(0);
+                                }
+                            }} className="flex">
+                                <CheckIcon /><span className="ml-2">Folder bar (Ctrl+B)</span>
+                            </MenuButton>
+                        </div>
+                    </MenuItem>}
+                </div>
                 <div className="ml-auto flex items-center undraggable h-full">
                     <AppBarButton onClick={window.Main.Minimize}>&#8211;</AppBarButton>
                     <AppBarButton onClick={window.Main.Close}>&#10005;</AppBarButton>
                 </div>
-            </div>
+            </div >
             <Container className="flex overflow-y-hidden" width="full" padding={0} style={{ height: mainContainerHeight, paddingTop: topBarHeight }}>
                 {vaultPath ? (
                     <>
-                        <FoldersSidebar mainContainerHeight={mainContainerHeight} folders={folders} handleOpenFile={handleOpenFile} openFileName={filename} />
+                        <FoldersSidebar
+                            mainContainerHeight={mainContainerHeight}
+                            folders={folders}
+                            handleOpenFile={handleOpenFile}
+                            openFileName={filename}
+                            width={folderbarWidth}
+                            setWidth={setFolderbarWidth}
+                        />
                         {fileIsOpen ? (
                             <div className="px-4 overflow-y-auto flex-grow pt-4">
                                 {filename && <FileWithSections filename={filename} sections={content} />}
@@ -197,7 +227,7 @@ function App() {
                     <div className="p-4 flex-grow">
                         <p className="text-center text-gray-400">{language === "EN" ? "No file open." : "Aucun fichier ouvert."}</p>
                         <div className="flex my-4">
-                            <UiButton className="mx-auto" onClick={handleOpen}>{language === "FR" ? "Ouvrez" : "Open"}</UiButton>
+                            <UiButton className="mx-auto" onClick={handleOpenDir}>{language === "FR" ? "Ouvrez" : "Open"}</UiButton>
                         </div>
                     </div>
                 )}
