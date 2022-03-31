@@ -31,7 +31,7 @@ const MenuItem = ({ name, children }: { name: string, children: ReactNode }) => 
     const [isOpen, setIsOpen] = useState<boolean>(false);
     return (
         <div
-            className="h-full flex items-center px-3 text-gray-400 hover:bg-gray-100 relative"
+            className="h-full flex items-center px-3 text-gray-400 hover:bg-stone-100 relative"
             tabIndex={0}
             onMouseEnter={() => setIsOpen(true)}
             onFocus={() => setIsOpen(true)}
@@ -57,6 +57,7 @@ function App() {
     const [vaultPath, setVaultPath] = useState<string | null>(null);
     const [folders, setFolders] = useState<Folder[]>([]);
     const [folderbarWidth, setFolderbarWidth] = useState<number>(defaultWidth);
+    const vaultIsOpen = !!vaultPath;
 
     const { language, setLanguage } = useContext(LanguageContext);
 
@@ -164,12 +165,33 @@ function App() {
         }
     })
 
+    function handleToggleFolderBar() {
+        // Toggle open/close
+        const folderBarIsOpen = folderbarWidth >= 50
+        if (folderBarIsOpen) {
+            setFolderbarWidth(0);
+        } else {
+            setFolderbarWidth(defaultWidth);
+        }
+    }
+
+    useEffect(() => {
+        if (vaultIsOpen) {
+            // @ts-ignore doesn't recognize global
+            Mousetrap.bindGlobal("mod+b", handleToggleFolderBar);
+        }
+
+        return () => {
+            // @ts-ignore doesn't recognize global
+            Mousetrap.unbindGlobal("mod+b");
+        }
+    }, [vaultIsOpen]);
+
     return (
         <>
             <div className="w-full flex items-center h-10 draggable text-sm fixed bg-stone-200 z-50">
                 <span className="ml-4">
-                    {/* TOOD: saved status in the title. */}
-                    {`${content ? (filename || "New list*") : "Scratchpad"}${(!!filename && !!content && !!fileContent && !(content === fileContent) ? "*" : "")}`}
+                    {vaultIsOpen ? vaultPath.split("\\")[vaultPath.split("\\").length - 1] : "Scratchpad"}
                 </span>
                 <div className="flex items-center ml-3 undraggable h-full">
                     <MenuItem name="File">
@@ -177,22 +199,13 @@ function App() {
                             {/* <MenuButton onClick={handleNew}>New (Ctrl+N)</MenuButton> */}
                             {/* <MenuButton onClick={handleSave}>Save (Ctrl+S)</MenuButton> */}
                             {/* <MenuButton onClick={handleSaveAs}>Save as (Ctrl+Shift+S)</MenuButton> */}
-                            <MenuButton onClick={handleOpenDir}>Open vault (Ctrl+O)</MenuButton>
+                            <MenuButton onClick={handleOpenDir}>{language === "EN" ? "Open vault" : "Ouvrir un dossier"} (Ctrl+O)</MenuButton>
                         </div>
                     </MenuItem>
-                </div>
-                <div className="flex items-center ml-3 undraggable h-full">
-                    {vaultPath && <MenuItem name="View">
+                    {vaultIsOpen && <MenuItem name="View">
                         <div className="absolute bg-white top-10 left-0">
-                            <MenuButton onClick={() => {
-                                // Toggle open/close
-                                if (folderbarWidth < 50) {
-                                    setFolderbarWidth(defaultWidth);
-                                } else {
-                                    setFolderbarWidth(0);
-                                }
-                            }} className="flex">
-                                <CheckIcon /><span className="ml-2">Folder bar (Ctrl+B)</span>
+                            <MenuButton onClick={handleToggleFolderBar} className="flex">
+                                <CheckIcon /><span className="ml-2">{language === "EN" ? "Folders" : "Dossiers"} (Ctrl+B)</span>
                             </MenuButton>
                         </div>
                     </MenuItem>}
@@ -219,13 +232,17 @@ function App() {
                             </div>
                         ) : (
                             <div className="flex items-center justify-center text-center h-1/2 flex-grow">
-                                <p>No file is open.<br />Ctrl + n or Cmd + n to create a new {false ? "folder to store your files" : "file"}.</p>
+                                {language === "EN" ? (
+                                    <p>No file is open.<br />Ctrl + n or Cmd + n to create a new {false ? "folder to store your files" : "file"}.</p>
+                                ) : (
+                                    <p>Aucun fichier ouvert.<br />Utilisez Ctrl + n ou Cmd + n afin de créer un nouveau {false ? "dossier" : "fichier"}.</p>
+                                )}
                             </div>
                         )}
                     </>
                 ) : (
                     <div className="p-4 flex-grow">
-                        <p className="text-center text-gray-400">{language === "EN" ? "No file open." : "Aucun fichier ouvert."}</p>
+                        <p className="text-center text-gray-400">{language === "EN" ? "No folder is open." : "Aucun dossier ouvert."}</p>
                         <div className="flex my-4">
                             <UiButton className="mx-auto" onClick={handleOpenDir}>{language === "FR" ? "Ouvrez" : "Open"}</UiButton>
                         </div>

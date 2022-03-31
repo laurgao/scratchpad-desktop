@@ -139,7 +139,7 @@ const FoldersSidebar = ({ mainContainerHeight, folders, handleOpenFile, openFile
                                         <div key={fileName} onClick={() => handleOpenFile(folder.name, fileName)}>
                                             <p
                                                 className={`cursor-pointer rounded-md px-2 py-1 ${openFileName === fileName && "bg-blue-400 text-white"}`}
-                                            >{fileName}</p>
+                                            >{fileName.slice(0, -3)}</p>
                                         </div>
                                     )}</div>
                             </Accordion>
