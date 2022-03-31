@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { language, LanguageContext, LOCAL_STORAGE_KEY } from "../components/SettingsModal";
 import App from "./App";
 
 const AppWrapper = () => {
     const [language, setLanguage] = useState<language>(localStorage.getItem(LOCAL_STORAGE_KEY) as language || "EN");
     const value = { language, setLanguage };
-    console.log(language)
+
+    useEffect(() => {
+        localStorage.setItem(LOCAL_STORAGE_KEY, language);
+    }, [language])
 
     return (
         <LanguageContext.Provider value={value}>
