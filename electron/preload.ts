@@ -34,6 +34,9 @@ const api = {
     OpenDir: () => {
         ipcRenderer.send("openDir");
     },
+    OpenDirPath: (dirPath: string) => {
+        ipcRenderer.send("openDirPath", dirPath);
+    },
     Save: (content: Section[]) => {
         ipcRenderer.send("save", content);
     },
@@ -48,7 +51,7 @@ const api = {
      */
     on: (channel: string, callback: (data: any) => void) => {
         ipcRenderer.on(channel, (_, data) => callback(data));
-    }
+    },
 };
 contextBridge.exposeInMainWorld("Main", api);
 /**

@@ -1,4 +1,4 @@
-import { CheckIcon } from '@heroicons/react/solid';
+import { CheckIcon } from "@heroicons/react/solid";
 import Mousetrap from "mousetrap";
 import "mousetrap-global-bind";
 import { ButtonHTMLAttributes, DetailedHTMLProps, ReactNode, useContext, useEffect, useState } from "react";
@@ -16,7 +16,10 @@ const AppBarButton = (props: DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonEl
 );
 
 export const UiButton = (props: DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>) => (
-    <button {...props} className={`${props.className || ""} bg-blue-400 hover:bg-blue-700 text-white transition font-semibold py-1 px-2 text-sm border rounded`} />
+    <button
+        {...props}
+        className={`${props.className || ""} bg-blue-400 hover:bg-blue-700 text-white transition font-semibold py-1 px-2 text-sm border rounded`}
+    />
 );
 
 const UiButton2 = (props: DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>) => (
@@ -24,10 +27,13 @@ const UiButton2 = (props: DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonEleme
 );
 
 const MenuButton = (props: DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>) => (
-    <button {...props} className={`${props.className || ""} h-10 w-full flex items-center px-4 text-gray-400 hover:bg-gray-100 whitespace-nowrap`} />
+    <button
+        {...props}
+        className={`${props.className || ""} h-10 w-full flex items-center px-4 text-gray-400 hover:bg-gray-100 whitespace-nowrap`}
+    />
 );
 
-const MenuItem = ({ name, children }: { name: string, children: ReactNode }) => {
+const MenuItem = ({ name, children }: { name: string; children: ReactNode }) => {
     const [isOpen, setIsOpen] = useState<boolean>(false);
     return (
         <div
@@ -41,25 +47,43 @@ const MenuItem = ({ name, children }: { name: string, children: ReactNode }) => 
             <span>{name}</span>
             {isOpen && children}
         </div>
-    )
-}
+    );
+};
 
 function App() {
     const [isAwaitingOpen, setIsAwaitingOpen] = useState<boolean>(false);
     const [isAwaitingOpenFile, setIsAwaitingOpenFile] = useState<boolean>(false);
-    const [content, setContent] = useState<Section[] | null>(null);
+    const [fileContent, setFileContent] = useState<Section[] | null>(null);
     const [filename, setFilename] = useState<string | null>(null);
-    const fileIsOpen = !!content;
+    const fileIsOpen = !!fileContent;
     const [settingsIsOpen, setSettingsIsOpen] = useState<boolean>(false);
     const [vaultPath, setVaultPath] = useState<string | null>(null);
     const [folders, setFolders] = useState<Folder[]>([]);
     const [folderbarWidth, setFolderbarWidth] = useState<number>(defaultWidth);
     const vaultIsOpen = !!vaultPath;
+    const [iter, setIter] = useState<number>(0);
+
+    // When iter changes, we get the newest folder info.
+    useEffect(() => {
+        if (vaultIsOpen) {
+            window.Main.OpenDirPath(vaultPath);
+            window.Main.on("openDirPath", (returned: { path: string; folders: Folder[] }) => {
+                if (returned.path !== vaultPath) {
+                    console.warn("Got a different vault path than expected.");
+                    console.log(returned.path, vaultPath);
+                }
+                setFolders(returned.folders);
+                setIsAwaitingOpen(false);
+            });
+        } else {
+            console.warn("Tried to increment iter but vault is not open.");
+        }
+    }, [iter]);
 
     const { language, setLanguage } = useContext(LanguageContext);
 
     const topBarHeight = 40;
-    const mainContainerHeight = (fileIsOpen) ? `calc(100vh - ${footerHeight}px)` : "100vh"
+    const mainContainerHeight = fileIsOpen ? `calc(100vh - ${footerHeight}px)` : "100vh";
 
     function handleOpenDir() {
         setIsAwaitingOpen(true);
@@ -73,18 +97,18 @@ function App() {
 
     useEffect(() => {
         if (isAwaitingOpen && window.Main)
-            window.Main.on("openDir", (returned: { path: string, folders: Folder[] }) => {
-                setVaultPath(returned.path)
+            window.Main.on("openDir", (returned: { path: string; folders: Folder[] }) => {
+                setVaultPath(returned.path);
                 setFolders(returned.folders);
                 setIsAwaitingOpen(false);
-            })
+            });
     }, [isAwaitingOpen]);
 
     useEffect(() => {
         if (isAwaitingOpenFile && window.Main)
-            window.Main.on("open", ({ filename, sections }: { filename: string, sections: Section[] }) => {
+            window.Main.on("open", ({ filename, sections }: { filename: string; sections: Section[] }) => {
                 setFilename(filename);
-                setContent(sections);
+                setFileContent(sections);
                 setIsAwaitingOpenFile(false);
             });
     }, [isAwaitingOpenFile]);
@@ -96,12 +120,12 @@ function App() {
         return () => {
             // @ts-ignore doesn't recognize global
             Mousetrap.unbindGlobal("mod+o");
-        }
-    })
+        };
+    });
 
     function handleToggleFolderBar() {
         // Toggle open/close
-        const folderBarIsOpen = folderbarWidth >= 50
+        const folderBarIsOpen = folderbarWidth >= 50;
         if (folderBarIsOpen) {
             setFolderbarWidth(0);
         } else {
@@ -118,15 +142,13 @@ function App() {
         return () => {
             // @ts-ignore doesn't recognize global
             Mousetrap.unbindGlobal("mod+b");
-        }
+        };
     }, [vaultIsOpen]);
 
     return (
         <>
             <div className="w-full flex items-center h-10 draggable text-sm fixed bg-stone-200 z-50">
-                <span className="ml-4">
-                    {vaultIsOpen ? vaultPath.split("\\")[vaultPath.split("\\").length - 1] : "Scratchpad"}
-                </span>
+                <span className="ml-4">{vaultIsOpen ? vaultPath.split("\\")[vaultPath.split("\\").length - 1] : "Scratchpad"}</span>
                 <div className="flex items-center ml-3 undraggable h-full">
                     <MenuItem name="File">
                         <div className="absolute bg-white top-10 left-0">
@@ -136,20 +158,28 @@ function App() {
                             <MenuButton onClick={handleOpenDir}>{language === "EN" ? "Open vault" : "Ouvrir un dossier"} (Ctrl+O)</MenuButton>
                         </div>
                     </MenuItem>
-                    {vaultIsOpen && <MenuItem name="View">
-                        <div className="absolute bg-white top-10 left-0">
-                            <MenuButton onClick={handleToggleFolderBar} className="flex">
-                                <CheckIcon /><span className="ml-2">{language === "EN" ? "Folders" : "Dossiers"} (Ctrl+B)</span>
-                            </MenuButton>
-                        </div>
-                    </MenuItem>}
+                    {vaultIsOpen && (
+                        <MenuItem name="View">
+                            <div className="absolute bg-white top-10 left-0">
+                                <MenuButton onClick={handleToggleFolderBar} className="flex">
+                                    <CheckIcon />
+                                    <span className="ml-2">{language === "EN" ? "Folders" : "Dossiers"} (Ctrl+B)</span>
+                                </MenuButton>
+                            </div>
+                        </MenuItem>
+                    )}
                 </div>
                 <div className="ml-auto flex items-center undraggable h-full">
                     <AppBarButton onClick={window.Main.Minimize}>&#8211;</AppBarButton>
                     <AppBarButton onClick={window.Main.Close}>&#10005;</AppBarButton>
                 </div>
-            </div >
-            <Container className="flex overflow-y-hidden" width="full" padding={0} style={{ height: mainContainerHeight, paddingTop: topBarHeight }}>
+            </div>
+            <Container
+                className="flex overflow-y-hidden"
+                width="full"
+                padding={0}
+                style={{ height: mainContainerHeight, paddingTop: topBarHeight }}
+            >
                 {vaultPath ? (
                     <>
                         <FoldersSidebar
@@ -160,17 +190,26 @@ function App() {
                             width={folderbarWidth}
                             setWidth={setFolderbarWidth}
                             vaultPath={vaultPath}
+                            setIter={setIter}
                         />
                         {fileIsOpen ? (
                             <div className="px-4 overflow-y-auto flex-grow pt-4">
-                                {filename && <FileWithSections filename={filename} sections={content} />}
+                                {filename && <FileWithSections filename={filename} sections={fileContent} />}
                             </div>
                         ) : (
                             <div className="flex items-center justify-center text-center h-1/2 flex-grow">
                                 {language === "EN" ? (
-                                    <p>No file is open.<br />Ctrl + n or Cmd + n to create a new {false ? "folder to store your files" : "file"}.</p>
+                                    <p>
+                                        No file is open.
+                                        <br />
+                                        Ctrl + n or Cmd + n to create a new {false ? "folder to store your files" : "file"}.
+                                    </p>
                                 ) : (
-                                    <p>Aucun fichier ouvert.<br />Utilisez Ctrl + n ou Cmd + n afin de créer un nouveau {false ? "dossier" : "fichier"}.</p>
+                                    <p>
+                                        Aucun fichier ouvert.
+                                        <br />
+                                        Utilisez Ctrl + n ou Cmd + n afin de créer un nouveau {false ? "dossier" : "fichier"}.
+                                    </p>
                                 )}
                             </div>
                         )}
@@ -179,12 +218,16 @@ function App() {
                     <div className="p-4 flex-grow">
                         <p className="text-center text-gray-400">{language === "EN" ? "No folder is open." : "Aucun dossier ouvert."}</p>
                         <div className="flex my-4">
-                            <UiButton className="mx-auto" onClick={handleOpenDir}>{language === "FR" ? "Ouvrez" : "Open"}</UiButton>
+                            <UiButton className="mx-auto" onClick={handleOpenDir}>
+                                {language === "FR" ? "Ouvrez" : "Open"}
+                            </UiButton>
                         </div>
                     </div>
                 )}
-                <div className="w-12 flex flex-col justify-end items-center bg-gray-100 gap-2" >
-                    <Button onClick={() => setSettingsIsOpen(true)}><FaCog className="text-gray-400" size={20} /></Button>
+                <div className="w-12 flex flex-col justify-end items-center bg-gray-100 gap-2">
+                    <Button onClick={() => setSettingsIsOpen(true)}>
+                        <FaCog className="text-gray-400" size={20} />
+                    </Button>
                 </div>
             </Container>
 
