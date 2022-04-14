@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from "react";
 import { FaPlus } from "react-icons/fa";
 import { waitForEl } from "../utils/key";
 import { Section } from "../utils/types";
@@ -12,19 +12,16 @@ import H2 from "./style/H2";
 const AUTOSAVE_INTERVAL = 1000;
 
 export interface SectionKwargsObj {
-    sectionId: string,
-    condition: "initiate-on-editing-title" | "initiate-with-cursor-on-bottom" | "initiate-on-specified-cursor-pos",
-    initialCursorPos?: { line: number, ch: number }
-};
+    sectionId: string;
+    condition: "initiate-on-editing-title" | "initiate-with-cursor-on-bottom" | "initiate-on-specified-cursor-pos";
+    initialCursorPos?: { line: number; ch: number };
+}
 
-const FileWithSections = ({ filename, sections }: {
-    filename: string,
-    sections: Section[]
-}) => {
+const FileWithSections = ({ filename, sections }: { filename: string; sections: Section[] }) => {
     const lastOpenSection = sections[0]._id; // For now by default open the first section when we open a file.
     const [openSectionId, setOpenSectionId] = useState<string | null>(lastOpenSection);
     const [sectionsState, setSectionsState] = useState<Section[]>(sections); // Exposed to the editor components
-    const [sectionsStateSaved, setSectionsStateSaved] = useState<Section[]>(sections); // Not exposed to the editor components, represents the content of the markdown files. 
+    const [sectionsStateSaved, setSectionsStateSaved] = useState<Section[]>(sections); // Not exposed to the editor components, represents the content of the markdown files.
 
     const [newSectionName, setNewSectionName] = useState<string>("");
     const [isCreateNewSection, setIsCreateNewSection] = useState<boolean>(false);
@@ -34,8 +31,7 @@ const FileWithSections = ({ filename, sections }: {
     useEffect(() => {
         setSectionsState(sections);
         setSectionsStateSaved(sections);
-    }, [sections])
-
+    }, [sections]);
 
     function saveFile(sectionsToSave: Section[]): void {
         // if (!filename) return handleSaveAs();
@@ -47,32 +43,34 @@ const FileWithSections = ({ filename, sections }: {
     }
 
     // Autosave stuff
-    const eq = sectionsStateSaved.every((s, i) => Object.keys(s).every(k => s[k] === sectionsState[i][k])) // check the contents of the 2 vars
+    const eq = sectionsStateSaved.every((s, i) => Object.keys(s).every((k) => s[k] === sectionsState[i][k])); // check the contents of the 2 vars
     const [isSaved, setIsSaved] = useState<boolean>(true);
     useEffect(() => {
         if (!eq) setIsSaved(false);
-    }, [sectionsState])
-
+    }, [sectionsState]);
 
     // MAIN AUTOSAVE INTERVAL
     useEffect(() => {
         const interval = setInterval(() => {
-            if (!isSaved) saveFile(sectionsState)
-
+            if (!isSaved) saveFile(sectionsState);
         }, AUTOSAVE_INTERVAL);
 
         return () => {
             clearInterval(interval);
-        }
-    }, [sectionsState, isSaved])
+        };
+    }, [sectionsState, isSaved]);
 
     useEffect(() => {
-        // Save section when component is unmounted
+        // Save section when component is unmounted.
         return () => {
             if (!isSaved) saveFile(sectionsState);
-        }
-    }, [])
+        };
+    }, []);
 
+    useEffect(() => {
+        // Reset open section when file changes
+        setOpenSectionId(lastOpenSection);
+    }, [filename]);
 
     // Used for passing information between sections
     // SectionEditor will run functions on open depending on sectionkwargs and will set sectionkwargs as null right after.
@@ -95,59 +93,69 @@ const FileWithSections = ({ filename, sections }: {
                                 setValue={setNewSectionName}
                                 id="new-section"
                                 placeholder={language === "FR" ? "Nom de la nouvelle partie" : "New section name"}
-                                onKeyDown={e => {
+                                onKeyDown={(e) => {
                                     if (e.key === "Enter") {
                                         // Create the section
-                                        const newId = (sectionsState.length + 2).toString()
+                                        const newId = (sectionsState.length + 2).toString();
                                         const newSection: Section = {
                                             title: newSectionName || "",
                                             body: "",
                                             _id: newId,
-                                        }
-                                        setSectionsState(prev => [...prev, newSection])
+                                        };
+                                        setSectionsState((prev) => [...prev, newSection]);
                                         setOpenSectionId(newId);
                                         setIsCreateNewSection(false);
                                         setNewSectionName("");
-                                    }
-                                    else if (e.key === "Escape") {
+                                    } else if (e.key === "Escape") {
                                         setIsCreateNewSection(false);
                                         setNewSectionName("");
                                     }
                                 }}
                             />
-                            {!!newSectionName && <p className="text-xs">Enter to save<br />Esc to exit</p>}
+                            {!!newSectionName && (
+                                <p className="text-xs">
+                                    Enter to save
+                                    <br />
+                                    Esc to exit
+                                </p>
+                            )}
                         </div>
                     ) : (
-                        <Button onClick={() => {
-                            setIsCreateNewSection(true);
-                            waitForEl("new-section");
-                        }} className="ml-auto"><FaPlus size={10} /></Button>
+                        <Button
+                            onClick={() => {
+                                setIsCreateNewSection(true);
+                                waitForEl("new-section");
+                            }}
+                            className="ml-auto"
+                        >
+                            <FaPlus size={10} />
+                        </Button>
                     )}
                     <hr />
                 </div>
 
                 {/* File sections */}
-                {sectionsState.map(s => {
-                    const thisSectionIsOpen = openSectionId === s._id
+                {sectionsState.map((s) => {
+                    const thisSectionIsOpen = openSectionId === s._id;
                     return (
                         <SectionEditor
                             key={s._id}
                             section={s}
                             isOpen={thisSectionIsOpen}
                             setOpenSectionId={setOpenSectionId}
-                            sectionsOrder={sectionsState.map(s => s._id)}
+                            sectionsOrder={sectionsState.map((s) => s._id)}
                             sectionKwargs={sectionKwargs}
                             setSectionKwargs={setSectionKwargs}
                             setSections={setSectionsState}
                         />
-                    )
+                    );
                 })}
             </div>
 
             {/* Footer */}
             {<Footer sections={sectionsState} openSectionId={openSectionId} eq={eq} isSaved={isSaved} />}
         </>
-    )
-}
+    );
+};
 
-export default FileWithSections
+export default FileWithSections;
